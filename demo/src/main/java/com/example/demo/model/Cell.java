@@ -21,5 +21,5 @@ public class Cell {
     private int rowNum;
     private String colNum;
     private String value;
-    private String formula;  // Null if static value
+    private String formula;
 }
