@@ -31,7 +31,11 @@ public class SheetController {
         Optional<Sheet> sheet = sheetService.getSheetById(id);
         return sheet.<ResponseEntity<Object>>map(ResponseEntity::ok)
             .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("status", 404, "error", "Not Found", "message", "Sheet not found", "path", "/sheets/" + id)));
+                .body(Map.of(
+                    "status", 404, 
+                    "error", "Not Found", 
+                    "message", "Sheet with ID " + id + " not found, cannot GET",
+                    "path", "/sheets/" + id)));
     }
 
     @PostMapping
@@ -40,12 +44,18 @@ public class SheetController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Sheet> updateSheet(@PathVariable int id, @RequestBody Sheet updatedSheet) {
+    public ResponseEntity<Object> updateSheet(@PathVariable int id, @RequestBody Sheet updatedSheet) {
         try {
             Sheet sheet = sheetService.updateSheet(id, updatedSheet);
             return ResponseEntity.ok(sheet);
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of(
+                    "status", 404,
+                    "error", "Not Found",
+                    "message", "Sheet with ID " + id + " not found, cannot UPDATE",
+                    "path", "/sheets/" + id
+                ));
         }
     }
 
