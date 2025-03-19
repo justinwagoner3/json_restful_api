@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.exception.SheetNotFoundException;
 import com.example.demo.model.Sheet;
 import com.example.demo.service.SheetService;
 import org.springframework.http.ResponseEntity;
@@ -9,8 +10,6 @@ import org.springframework.http.HttpStatus;
 import java.util.List;
 import java.util.Optional;
 import java.util.Map;
-import java.util.HashMap;
-import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/sheets")
@@ -40,47 +39,57 @@ public class SheetController {
 
     @PostMapping
     public ResponseEntity<Object> createSheet(@RequestBody Sheet sheet) {
-        if (sheet.getName() == null || sheet.getName().trim().isEmpty()) {
+        try {
+            Sheet createdSheet = sheetService.createSheet(sheet);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdSheet);
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of(
                     "status", 400,
                     "error", "Bad Request",
-                    "message", "Sheet name is required and cannot be empty",
+                    "message", e.getMessage(),
                     "path", "/sheets"
                 ));
         }
-        Sheet createdSheet = sheetService.createSheet(sheet);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdSheet);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Object> updateSheet(@PathVariable int id, @RequestBody Sheet updatedSheet) {
-        if (updatedSheet.getName() == null || updatedSheet.getName().trim().isEmpty()) {
+        try {
+            Sheet sheet = sheetService.updateSheet(id, updatedSheet);
+            return ResponseEntity.ok(sheet);
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of(
                     "status", 400,
                     "error", "Bad Request",
-                    "message", "Sheet name is required and cannot be empty",
+                    "message", e.getMessage(),
                     "path", "/sheets/" + id
                 ));
-        }
-        try {
-            Sheet sheet = sheetService.updateSheet(id, updatedSheet);
-            return ResponseEntity.ok(sheet);
-        } catch (RuntimeException e) {
+        } catch (SheetNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of(
                     "status", 404,
                     "error", "Not Found",
-                    "message", "Sheet with ID " + id + " not found, cannot UPDATE",
+                    "message", e.getMessage(),
                     "path", "/sheets/" + id
                 ));
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSheet(@PathVariable int id) {
-        sheetService.deleteSheet(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Object> deleteSheet(@PathVariable int id) {
+        try {
+            sheetService.deleteSheet(id);
+            return ResponseEntity.noContent().build();
+        } catch (SheetNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of(
+                    "status", 404,
+                    "error", "Not Found",
+                    "message", e.getMessage(),
+                    "path", "/sheets/" + id
+                ));
+        }
     }
 }
