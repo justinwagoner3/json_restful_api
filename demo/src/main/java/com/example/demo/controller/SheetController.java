@@ -39,12 +39,31 @@ public class SheetController {
     }
 
     @PostMapping
-    public Sheet createSheet(@RequestBody Sheet sheet) {
-        return sheetService.createSheet(sheet);
+    public ResponseEntity<Object> createSheet(@RequestBody Sheet sheet) {
+        if (sheet.getName() == null || sheet.getName().trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of(
+                    "status", 400,
+                    "error", "Bad Request",
+                    "message", "Sheet name is required and cannot be empty",
+                    "path", "/sheets"
+                ));
+        }
+        Sheet createdSheet = sheetService.createSheet(sheet);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdSheet);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Object> updateSheet(@PathVariable int id, @RequestBody Sheet updatedSheet) {
+        if (updatedSheet.getName() == null || updatedSheet.getName().trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of(
+                    "status", 400,
+                    "error", "Bad Request",
+                    "message", "Sheet name is required and cannot be empty",
+                    "path", "/sheets/" + id
+                ));
+        }
         try {
             Sheet sheet = sheetService.updateSheet(id, updatedSheet);
             return ResponseEntity.ok(sheet);
