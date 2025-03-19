@@ -4,9 +4,13 @@ import com.example.demo.model.Sheet;
 import com.example.demo.service.SheetService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
+import java.util.HashMap;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/sheets")
@@ -23,9 +27,11 @@ public class SheetController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Sheet> getSheetById(@PathVariable int id) {
+    public ResponseEntity<Object> getSheetById(@PathVariable int id) {
         Optional<Sheet> sheet = sheetService.getSheetById(id);
-        return sheet.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        return sheet.<ResponseEntity<Object>>map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("status", 404, "error", "Not Found", "message", "Sheet not found", "path", "/sheets/" + id)));
     }
 
     @PostMapping
