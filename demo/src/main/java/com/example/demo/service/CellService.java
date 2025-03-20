@@ -18,12 +18,12 @@ import java.util.Optional;
 public class CellService {
     private final CellRepository cellRepository;
     private final SheetRepository sheetRepository;
-    private final ActivityLogRepository activityLogRepository;
+    private final ActivityLogService activityLogService;
 
-    public CellService(CellRepository cellRepository, SheetRepository sheetRepository, ActivityLogRepository activityLogRepository) {
+    public CellService(CellRepository cellRepository, SheetRepository sheetRepository, ActivityLogService activityLogService) {
         this.cellRepository = cellRepository;
         this.sheetRepository = sheetRepository;
-        this.activityLogRepository = activityLogRepository;
+        this.activityLogService = activityLogService;
     }
 
     public List<Cell> getCellsBySheetId(int sheetId) {
@@ -36,7 +36,7 @@ public class CellService {
 
     @Transactional
     public Cell createOrUpdateCell(Cell cell) {
-        if (cell.getSheet() == null || cell.getSheet().getId() == null || cell.getRowNum() == null || cell.getColNum() == null) {
+        if (cell.getSheet() == null || cell.getSheet().getId() == null || cell.getRowNum() <= 0 || cell.getColNum() == null) {
             throw new IllegalArgumentException("Sheet ID, row number, and column number are required.");
         }
 
@@ -58,14 +58,14 @@ public class CellService {
                 return null;
             }
 
-            activityLogRepository.save(new ActivityLog(sheet, cell.getRowNum(), cell.getColNum(), cell.getValue(),
-                    cell.getFormula(), "SYSTEM", ActivityLog.OperationType.UPDATE, ActivityLog.EntityType.CELL));
+            activityLogService.logActivity(sheet, cell.getRowNum(), cell.getColNum(), cell.getValue(),
+                    cell.getFormula(), "system", ActivityLog.OperationType.UPDATE, ActivityLog.EntityType.CELL);
             return cellRepository.save(updatedCell);
         }
 
         // New cell creation
-        activityLogRepository.save(new ActivityLog(sheet, cell.getRowNum(), cell.getColNum(), cell.getValue(),
-                cell.getFormula(), "SYSTEM", ActivityLog.OperationType.ADD, ActivityLog.EntityType.CELL));
+        activityLogService.logActivity(sheet, cell.getRowNum(), cell.getColNum(), cell.getValue(),
+                cell.getFormula(), "system", ActivityLog.OperationType.ADD, ActivityLog.EntityType.CELL);
         return cellRepository.save(cell);
     }
 
@@ -74,8 +74,8 @@ public class CellService {
         Optional<Cell> cell = cellRepository.findBySheetIdAndRowNumAndColNum(sheetId, rowNum, colNum);
 
         if (cell.isPresent()) {
-            activityLogRepository.save(new ActivityLog(cell.get().getSheet(), rowNum, colNum, cell.get().getValue(),
-                    cell.get().getFormula(), "SYSTEM", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.CELL));
+            activityLogService.logActivity(cell.get().getSheet(), rowNum, colNum, cell.get().getValue(),
+                    cell.get().getFormula(), "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.CELL);
             cellRepository.delete(cell.get());
         } else {
             throw new CellNotFoundException("Cell not found for Sheet ID " + sheetId + ", Row " + rowNum + ", Column " + colNum);

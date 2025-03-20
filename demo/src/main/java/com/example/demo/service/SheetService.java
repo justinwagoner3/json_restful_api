@@ -13,11 +13,11 @@ import java.util.Optional;
 @Service
 public class SheetService {
     private final SheetRepository sheetRepository;
-    private final ActivityLogRepository activityLogRepository;
+    private final ActivityLogService activityLogService;
 
-    public SheetService(SheetRepository sheetRepository, ActivityLogRepository activityLogRepository) {
+    public SheetService(SheetRepository sheetRepository, ActivityLogService activityLogService) {
         this.sheetRepository = sheetRepository;
-        this.activityLogRepository = activityLogRepository;
+        this.activityLogService = activityLogService;
     }
 
     public List<Sheet> getAllSheets() {
@@ -36,7 +36,7 @@ public class SheetService {
         Sheet createdSheet = sheetRepository.save(sheet);
 
         // Log the creation with entityType = SHEET
-        logActivity(createdSheet, "system", ActivityLog.OperationType.ADD, ActivityLog.EntityType.SHEET);
+        activityLogService.logActivity(createdSheet, "system", ActivityLog.OperationType.ADD, ActivityLog.EntityType.SHEET);
 
         return createdSheet;
     }
@@ -50,7 +50,7 @@ public class SheetService {
             Sheet updatedSheet = sheetRepository.save(sheet);
 
             // Log the update with entityType = SHEET
-            logActivity(updatedSheet, "system", ActivityLog.OperationType.UPDATE, ActivityLog.EntityType.SHEET);
+            activityLogService.logActivity(updatedSheet, "system", ActivityLog.OperationType.UPDATE, ActivityLog.EntityType.SHEET);
 
             return updatedSheet;
         }).orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + id + " not found, cannot UPDATE."));
@@ -63,19 +63,6 @@ public class SheetService {
         sheetRepository.deleteById(id);
 
         // Log the deletion with entityType = SHEET
-        logActivity(sheet, "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.SHEET);
-    }
-
-    private void logActivity(Sheet sheet, String updatedBy, ActivityLog.OperationType operation, ActivityLog.EntityType entityType) {
-        ActivityLog log = new ActivityLog();
-        log.setSheet(sheet);
-        log.setRowNum(null); // Since it's a Sheet operation
-        log.setColNum(null); // Not applicable for sheets
-        log.setValue(sheet.getName());
-        log.setFormula(null);
-        log.setUpdatedBy(updatedBy);
-        log.setOperation(operation);
-        log.setEntityType(entityType);
-        activityLogRepository.save(log);
+        activityLogService.logActivity(sheet, "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.SHEET);
     }
 }

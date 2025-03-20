@@ -12,7 +12,7 @@ import lombok.*;
 public class Cell {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "sheet_id", nullable = false)

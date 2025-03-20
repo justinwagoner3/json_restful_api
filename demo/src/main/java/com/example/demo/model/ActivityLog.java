@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class ActivityLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "sheet_id", nullable = false)
