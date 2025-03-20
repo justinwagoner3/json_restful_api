@@ -24,9 +24,8 @@ public class SheetService {
         return sheetRepository.findAll();
     }
 
-    public Sheet getSheetById(int id) {
-        return sheetRepository.findById(id)
-            .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + id + " not found, cannot GET."));
+    public Optional<Sheet> getSheetById(int id) {
+        return sheetRepository.findById(id);
     }
 
     public Sheet createSheet(Sheet sheet) {

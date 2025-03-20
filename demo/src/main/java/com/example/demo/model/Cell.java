@@ -14,12 +14,9 @@ public class Cell {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "sheet_id", insertable = false, updatable = false) // Prevents duplicate persistence
-    private Integer sheetId; // We need this for API interactions
-
     @ManyToOne
     @JoinColumn(name = "sheet_id", nullable = false)
-    private Sheet sheet;  // This must exist!
+    private Sheet sheet;
 
     @Column(nullable = false)
     private Integer rowNum;

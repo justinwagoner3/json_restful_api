@@ -28,7 +28,8 @@ public class SheetController {
     @GetMapping("/{id}")
     public ResponseEntity<Object> getSheetById(@PathVariable int id) {
         try {
-            Sheet sheet = sheetService.getSheetById(id);
+            Sheet sheet = sheetService.getSheetById(id)
+                .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + id + " not found."));
             return ResponseEntity.ok(sheet);
         } catch (SheetNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

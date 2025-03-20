@@ -28,28 +28,28 @@ public class CellService {
         this.activityLogService = activityLogService;
     }
 
-    public List<Cell> getCellsBySheetId(int sheetId) {
-        return cellRepository.findBySheetId(sheetId);
+    public List<Cell> getCellsBySheet(Sheet sheet) {
+        return cellRepository.findBySheet(sheet);
     }
 
-    public Optional<Cell> getCellBySheetRowCol(int sheetId, int rowNum, String colNum) {
-        return cellRepository.findBySheetIdAndRowNumAndColNum(sheetId, rowNum, colNum);
+    public Optional<Cell> getCellBySheetRowCol(Sheet sheet, int rowNum, String colNum) {
+        return cellRepository.findBySheetAndRowNumAndColNum(sheet, rowNum, colNum);
     }
 
     @Transactional
     public Cell createOrUpdateCell(Cell cell) {
-        if (cell.getSheetId() == null || cell.getRowNum() == null || cell.getColNum() == null) {
-            throw new IllegalArgumentException("Sheet ID, row number, and column number are required.");
+        if (cell.getSheet() == null || cell.getRowNum() == null || cell.getColNum() == null) {
+            throw new IllegalArgumentException("Sheet, row number, and column number are required.");
         }
 
         // Ensure the sheet exists
-        Sheet sheet = sheetRepository.findById(cell.getSheetId())
-                .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + cell.getSheetId() + " not found."));
+        Sheet sheet = sheetRepository.findById(cell.getSheet().getId())
+                .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + cell.getSheet().getId() + " not found."));
 
-        cell.setSheet(sheet); // This explicitly sets the Sheet object in Cell
+        cell.setSheet(sheet); // Ensures the reference is valid
 
         // Check if cell exists
-        Optional<Cell> existingCell = cellRepository.findBySheetIdAndRowNumAndColNum(cell.getSheetId(), cell.getRowNum(), cell.getColNum());
+        Optional<Cell> existingCell = cellRepository.findBySheetAndRowNumAndColNum(sheet, cell.getRowNum(), cell.getColNum());
 
         if (existingCell.isPresent()) {
             Cell updatedCell = existingCell.get();
@@ -58,7 +58,7 @@ public class CellService {
 
             if ((cell.getValue() == null || cell.getValue().trim().isEmpty()) &&
                 (cell.getFormula() == null || cell.getFormula().trim().isEmpty())) {
-                deleteCell(cell.getSheetId(), cell.getRowNum(), cell.getColNum());
+                deleteCell(sheet, cell.getRowNum(), cell.getColNum());
                 return null;
             }
 
@@ -74,19 +74,15 @@ public class CellService {
     }
 
     @Transactional
-    public void deleteCell(int sheetId, int rowNum, String colNum) {
-        Optional<Cell> cell = cellRepository.findBySheetIdAndRowNumAndColNum(sheetId, rowNum, colNum);
+    public void deleteCell(Sheet sheet, int rowNum, String colNum) {
+        Optional<Cell> cell = cellRepository.findBySheetAndRowNumAndColNum(sheet, rowNum, colNum);
 
         if (cell.isPresent()) {
-            Sheet sheet = sheetRepository.findById(sheetId)
-                    .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + sheetId + " not found."));
-
             activityLogService.logActivity(sheet, rowNum, colNum, cell.get().getValue(),
                     cell.get().getFormula(), "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.CELL);
-
             cellRepository.delete(cell.get());
         } else {
-            throw new CellNotFoundException("Cell not found for Sheet ID " + sheetId + ", Row " + rowNum + ", Column " + colNum);
+            throw new CellNotFoundException("Cell not found for Sheet ID " + sheet.getId() + ", Row " + rowNum + ", Column " + colNum);
         }
     }
 }
