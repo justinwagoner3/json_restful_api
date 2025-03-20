@@ -52,13 +52,26 @@ public class CellController {
     @PostMapping
     public ResponseEntity<Object> createOrUpdateCell(@RequestBody Map<String, Object> requestBody) {
         try {
-            Integer sheetId = (Integer) requestBody.get("sheetId");
-            if (sheetId == null) {
+            Map<String, Object> sheetMap = (Map<String, Object>) requestBody.get("sheet");
+            if (sheetMap == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("status", 400, "error", "Bad Request", "message", "Sheet ID is required.", "path", "/cells"));
+                    .body(Map.of("status", 400, "error", "Bad Request", "message", "Sheet object is required.", "path", "/cells"));
             }
-            Sheet sheet = sheetService.getSheetById(sheetId)
+
+            Integer sheetId = sheetMap.get("sheetId") != null ? (Integer) sheetMap.get("sheetId") : null;
+            String sheetName = sheetMap.get("name") != null ? (String) sheetMap.get("name") : null;
+
+            Sheet sheet;
+            if (sheetId != null) {
+                sheet = sheetService.getSheetById(sheetId)
                     .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + sheetId + " not found."));
+            } else if (sheetName != null) {
+                sheet = sheetService.getSheetByName(sheetName)
+                    .orElseThrow(() -> new SheetNotFoundException("Sheet with name \"" + sheetName + "\" not found."));
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("status", 400, "error", "Bad Request", "message", "Either sheetId or name must be provided.", "path", "/cells"));
+            }
 
             Integer rowNum = (Integer) requestBody.get("rowNum");
             String colNum = (String) requestBody.get("colNum");
@@ -81,10 +94,10 @@ public class CellController {
             return ResponseEntity.ok(new CellDTO(createdCell));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("status", 400, "error", "Bad Request", "message", e.getMessage(), "path", "/cells"));
+                .body(Map.of("status", 400, "error", "Bad Request", "message", e.getMessage(), "path", "/cells"));
         } catch (SheetNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("status", 404, "error", "Not Found", "message", e.getMessage(), "path", "/cells"));
+                .body(Map.of("status", 404, "error", "Not Found", "message", e.getMessage(), "path", "/cells"));
         }
     }
 

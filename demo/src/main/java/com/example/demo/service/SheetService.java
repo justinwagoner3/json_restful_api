@@ -28,6 +28,10 @@ public class SheetService {
         return sheetRepository.findById(id);
     }
 
+    public Optional<Sheet> getSheetByName(String name) {
+        return sheetRepository.findByName(name);
+    }
+
     public Sheet createSheet(Sheet sheet) {
         if (sheet.getName() == null || sheet.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Sheet name is required and cannot be empty.");
