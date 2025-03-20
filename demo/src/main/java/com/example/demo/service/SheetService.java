@@ -6,6 +6,9 @@ import com.example.demo.model.Sheet;
 import com.example.demo.repository.ActivityLogRepository;
 import com.example.demo.repository.SheetRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,12 +39,17 @@ public class SheetService {
         if (sheet.getName() == null || sheet.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Sheet name is required and cannot be empty.");
         }
-        Sheet createdSheet = sheetRepository.save(sheet);
 
-        // Log the creation with entityType = SHEET
-        activityLogService.logActivity(createdSheet, "system", ActivityLog.OperationType.ADD, ActivityLog.EntityType.SHEET);
+        try {
+            Sheet createdSheet = sheetRepository.save(sheet);
 
-        return createdSheet;
+            // Log the creation with entityType = SHEET
+            activityLogService.logActivity(createdSheet, "system", ActivityLog.OperationType.ADD, ActivityLog.EntityType.SHEET);
+
+            return createdSheet;
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Sheet name already exists.");
+        }
     }
 
     public Sheet updateSheet(int id, Sheet newSheet) {
