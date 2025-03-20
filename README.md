@@ -1,3 +1,207 @@
+# Complete Walkthrough
+# API Walkthrough: Sheets & Cells Management
+
+This guide demonstrates how to interact with the REST API, showcasing CRUD operations for sheets and cells.
+
+## **1️⃣ Sheets API Operations**
+
+### **Create Sheet 1 (`sheet1`)**
+```sh
+curl -X POST "http://localhost:8080/sheets" \
+     -H "Content-Type: application/json" \
+     -d '{ "name": "sheet1" }'
+```
+#### **Expected Response (201 Created)**
+```json
+{
+  "id": 1,
+  "name": "sheet1"
+}
+```
+
+### **Create Sheet 2 (`sheet2`)**
+```sh
+curl -X POST "http://localhost:8080/sheets" \
+     -H "Content-Type: application/json" \
+     -d '{ "name": "sheet2" }'
+```
+#### **Expected Response (201 Created)**
+```json
+{
+  "id": 2,
+  "name": "sheet2"
+}
+```
+
+### **Update `sheet1` to `sheet1-updated`**
+```sh
+curl -X PUT "http://localhost:8080/sheets/1" \
+     -H "Content-Type: application/json" \
+     -d '{ "name": "sheet1-updated" }'
+```
+#### **Expected Response (200 OK)**
+```json
+{
+  "id": 1,
+  "name": "sheet1-updated"
+}
+```
+
+### **Get Sheet by ID (`sheet1-updated`)**
+```sh
+curl -X GET "http://localhost:8080/sheets/1"
+```
+#### **Expected Response (200 OK)**
+```json
+{
+  "id": 1,
+  "name": "sheet1-updated"
+}
+```
+
+### **Delete `sheet2`**
+```sh
+curl -X DELETE "http://localhost:8080/sheets/2"
+```
+#### **Expected Response (204 No Content)**
+
+### **Get All Sheets (Only `sheet1-updated` Should Exist)**
+```sh
+curl -X GET "http://localhost:8080/sheets"
+```
+#### **Expected Response (200 OK)**
+```json
+[
+  {
+    "id": 1,
+    "name": "sheet1-updated"
+  }
+]
+```
+
+---
+
+## **2️⃣ Cells API Operations**
+
+### **Create a Cell in `sheet1-updated`**
+```sh
+curl -X POST "http://localhost:8080/cells" \
+     -H "Content-Type: application/json" \
+     -d '{ 
+           "sheet": { "name": "sheet1-updated" },
+           "rowNum": 1,
+           "colNum": "A",
+           "value": "First Cell",
+           "formula": "=SUM(A1:A10)"
+         }'
+```
+#### **Expected Response (201 Created)**
+```json
+{
+  "id": 1,
+  "sheetId": 1,
+  "rowNum": 1,
+  "colNum": "A",
+  "value": "First Cell",
+  "formula": "=SUM(A1:A10)"
+}
+```
+
+### **Try Creating a Cell in a Non-Existent Sheet**
+```sh
+curl -X POST "http://localhost:8080/cells" \
+     -H "Content-Type: application/json" \
+     -d '{ 
+           "sheet": { "name": "nonexistent-sheet" },
+           "rowNum": 2,
+           "colNum": "B",
+           "value": "Should Fail",
+           "formula": ""
+         }'
+```
+#### **Expected Response (404 Not Found)**
+```json
+{
+  "status": 404,
+  "error": "Not Found",
+  "message": "Sheet with name 'nonexistent-sheet' not found.",
+  "path": "/cells"
+}
+```
+
+### **Get All Cells in `sheet1-updated`**
+```sh
+curl -X GET "http://localhost:8080/cells?sheetId=1"
+```
+#### **Expected Response (200 OK)**
+```json
+[
+  {
+    "id": 1,
+    "sheetId": 1,
+    "rowNum": 1,
+    "colNum": "A",
+    "value": "First Cell",
+    "formula": "=SUM(A1:A10)"
+  }
+]
+```
+
+### **Update Cell Value in `sheet1-updated`**
+```sh
+curl -X PUT "http://localhost:8080/cells" \
+     -H "Content-Type: application/json" \
+     -d '{ 
+           "sheet": { "name": "sheet1-updated" },
+           "rowNum": 1,
+           "colNum": "A",
+           "value": "Updated Cell",
+           "formula": ""
+         }'
+```
+#### **Expected Response (200 OK)**
+```json
+{
+  "id": 1,
+  "sheetId": 1,
+  "rowNum": 1,
+  "colNum": "A",
+  "value": "Updated Cell",
+  "formula": ""
+}
+```
+
+### **Delete Cell from `sheet1-updated`**
+```sh
+curl -X DELETE "http://localhost:8080/cells" \
+     -H "Content-Type: application/json" \
+     -d '{ 
+           "sheet": { "name": "sheet1-updated" },
+           "rowNum": 1,
+           "colNum": "A"
+         }'
+```
+#### **Expected Response (204 No Content)**
+
+### **Final Check: Get All Cells (Should be Empty)**
+```sh
+curl -X GET "http://localhost:8080/cells?sheetId=1"
+```
+#### **Expected Response (200 OK)**
+```json
+[]
+```
+
+---
+
+## **🎯 Summary of Features Demonstrated:**
+✅ Creating, updating, retrieving, and deleting **sheets**.  
+✅ Creating, updating, retrieving, and deleting **cells**.  
+✅ Error handling for **nonexistent sheets**.  
+✅ Final verification to confirm changes.  
+
+This guide provides a **quick and structured** way to showcase API functionality in an interview. 🚀
+
 # Packages
 
 * Spring Web (for REST API)
