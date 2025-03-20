@@ -46,6 +46,8 @@ public class CellService {
         Sheet sheet = sheetRepository.findById(cell.getSheetId())
                 .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + cell.getSheetId() + " not found."));
 
+        cell.setSheet(sheet); // This explicitly sets the Sheet object in Cell
+
         // Check if cell exists
         Optional<Cell> existingCell = cellRepository.findBySheetIdAndRowNumAndColNum(cell.getSheetId(), cell.getRowNum(), cell.getColNum());
 

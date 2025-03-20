@@ -22,8 +22,8 @@ public class CellController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Cell>> getCellsBySheetId(@RequestParam int sheet_id) {
-        return ResponseEntity.ok(cellService.getCellsBySheetId(sheet_id));
+    public ResponseEntity<List<Cell>> getCellsBySheetId(@RequestParam Integer sheetId) {
+        return ResponseEntity.ok(cellService.getCellsBySheetId(sheetId));
     }
 
     @GetMapping("/{sheetId}/{rowNum}/{colNum}")
@@ -40,12 +40,12 @@ public class CellController {
 
     @PostMapping
     public ResponseEntity<Object> createOrUpdateCell(
-            @RequestParam(value = "sheet_id", required = false) Integer sheetId, 
+            @RequestParam(value = "sheetId", required = false) Integer sheetId, 
             @RequestBody Map<String, Object> requestBody) {
         try {
-            // Try to get sheet_id from query param first, then fall back to JSON body
-            if (sheetId == null && requestBody.containsKey("sheet_id")) {
-                sheetId = (Integer) requestBody.get("sheet_id");
+            // Try to get sheetId from query param first, then fall back to JSON body
+            if (sheetId == null && requestBody.containsKey("sheetId")) {
+                sheetId = (Integer) requestBody.get("sheetId");
             }
 
             if (sheetId == null) {
@@ -104,21 +104,21 @@ public class CellController {
 
     @PutMapping
     public ResponseEntity<Object> updateCell(
-            @RequestParam(value = "sheet_id", required = false) Integer sheetId,
+            @RequestParam(value = "sheetId", required = false) Integer sheetId,
             @RequestBody Map<String, Object> requestBody) {
         return createOrUpdateCell(sheetId, requestBody);
     }
 
     @DeleteMapping
     public ResponseEntity<Object> deleteCell(
-            @RequestParam(value = "sheet_id", required = false) Integer sheetId,
+            @RequestParam(value = "sheetId", required = false) Integer sheetId,
             @RequestParam(value = "rowNum", required = false) Integer rowNum,
             @RequestParam(value = "colNum", required = false) String colNum,
             @RequestBody(required = false) Map<String, Object> requestBody) {
         try {
             // Allow delete parameters to come from query or request body
-            if (sheetId == null && requestBody != null && requestBody.containsKey("sheet_id")) {
-                sheetId = (Integer) requestBody.get("sheet_id");
+            if (sheetId == null && requestBody != null && requestBody.containsKey("sheetId")) {
+                sheetId = (Integer) requestBody.get("sheetId");
             }
             if (rowNum == null && requestBody != null && requestBody.containsKey("rowNum")) {
                 rowNum = (Integer) requestBody.get("rowNum");
