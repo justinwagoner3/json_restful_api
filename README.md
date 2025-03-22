@@ -14,8 +14,11 @@ curl -X POST "http://localhost:8080/sheets" \
 #### **Expected Response (201 Created)**
 ```json
 {
-  "id": 1,
-  "name": "sheet1"
+  "status": 201,
+  "data": {
+    "id": 1,
+    "name": "sheet1"
+  }
 }
 ```
 
@@ -28,8 +31,11 @@ curl -X POST "http://localhost:8080/sheets" \
 #### **Expected Response (201 Created)**
 ```json
 {
-  "id": 2,
-  "name": "sheet2"
+  "status": 201,
+  "data": {
+    "id": 2,
+    "name": "sheet2"
+  }
 }
 ```
 
@@ -42,8 +48,11 @@ curl -X PUT "http://localhost:8080/sheets/1" \
 #### **Expected Response (200 OK)**
 ```json
 {
-  "id": 1,
-  "name": "sheet1-updated"
+  "status": 200,
+  "data": {
+    "id": 1,
+    "name": "sheet1-updated"
+  }
 }
 ```
 
@@ -54,8 +63,11 @@ curl -X GET "http://localhost:8080/sheets/1"
 #### **Expected Response (200 OK)**
 ```json
 {
-  "id": 1,
-  "name": "sheet1-updated"
+  "status": 200,
+  "data": {
+    "id": 1,
+    "name": "sheet1-updated"
+  }
 }
 ```
 
@@ -71,12 +83,15 @@ curl -X GET "http://localhost:8080/sheets"
 ```
 #### **Expected Response (200 OK)**
 ```json
-[
-  {
-    "id": 1,
-    "name": "sheet1-updated"
-  }
-]
+{
+  "status": 200,
+  "data": [
+    {
+      "id": 1,
+      "name": "sheet1-updated"
+    }
+  ]
+}
 ```
 
 ---
@@ -98,12 +113,15 @@ curl -X POST "http://localhost:8080/cells" \
 #### **Expected Response (201 Created)**
 ```json
 {
-  "id": 1,
-  "sheetId": 1,
-  "rowNum": 1,
-  "colNum": "A",
-  "value": "First Cell",
-  "formula": "=SUM(A1:A10)"
+  "status": 201,
+  "data": {
+    "id": 1,
+    "sheetId": 1,
+    "rowNum": 1,
+    "colNum": "A",
+    "value": "First Cell",
+    "formula": "=SUM(A1:A10)"
+  }
 }
 ```
 
@@ -124,7 +142,7 @@ curl -X POST "http://localhost:8080/cells" \
 {
   "status": 404,
   "error": "Not Found",
-  "message": "Sheet with name 'nonexistent-sheet' not found.",
+  "message": "Sheet with name \"nonexistent-sheet\" not found.",
   "path": "/cells"
 }
 ```
@@ -135,16 +153,19 @@ curl -X GET "http://localhost:8080/cells?sheetId=1"
 ```
 #### **Expected Response (200 OK)**
 ```json
-[
-  {
-    "id": 1,
-    "sheetId": 1,
-    "rowNum": 1,
-    "colNum": "A",
-    "value": "First Cell",
-    "formula": "=SUM(A1:A10)"
-  }
-]
+{
+  "status": 200,
+  "data": [
+    {
+      "id": 1,
+      "sheetId": 1,
+      "rowNum": 1,
+      "colNum": "A",
+      "value": "First Cell",
+      "formula": "=SUM(A1:A10)"
+    }
+  ]
+}
 ```
 
 ### **Update Cell Value in `sheet1-updated`**
@@ -162,12 +183,15 @@ curl -X PUT "http://localhost:8080/cells" \
 #### **Expected Response (200 OK)**
 ```json
 {
-  "id": 1,
-  "sheetId": 1,
-  "rowNum": 1,
-  "colNum": "A",
-  "value": "Updated Cell",
-  "formula": ""
+  "status": 200,
+  "data": {
+    "id": 1,
+    "sheetId": 1,
+    "rowNum": 1,
+    "colNum": "A",
+    "value": "Updated Cell",
+    "formula": ""
+  }
 }
 ```
 
@@ -182,6 +206,12 @@ curl -X DELETE "http://localhost:8080/cells" \
          }'
 ```
 #### **Expected Response (204 No Content)**
+```json
+{
+  "status": 204,
+  "message": "Cell deleted successfully"
+}
+```
 
 ### **Final Check: Get All Cells (Should be Empty)**
 ```sh
@@ -189,7 +219,10 @@ curl -X GET "http://localhost:8080/cells?sheetId=1"
 ```
 #### **Expected Response (200 OK)**
 ```json
-[]
+{
+  "status": 200,
+  "data": []
+}
 ```
 
 ---
@@ -235,19 +268,9 @@ mysql> desc cells;
 ```
 
 ```
-mysql> mysql> desc activity_log;
+mysql> desc activity_log;
 +-------------+-------------------------------+------+-----+-------------------+-----------------------------------------------+
 | Field       | Type                          | Null | Key | Default           | Extra                                         |
 +-------------+-------------------------------+------+-----+-------------------+-----------------------------------------------+
 | id          | int                           | NO   | PRI | NULL              | auto_increment                                |
-| entity_type | enum('SHEET','CELL')          | NO   |     | NULL              |                                               |
-| operation   | enum('ADD','UPDATE','DELETE') | NO   |     | NULL              |                                               |
-| sheet_id    | int                           | NO   | MUL | NULL              |                                               |
-| row_num     | int                           | YES  |     | NULL              |                                               |
-| col_num     | varchar(10)                   | YES  |     | NULL              |                                               |
-| value       | text                          | NO   |     | NULL              |                                               |
-| formula     | text                          | YES  |     | NULL              |                                               |
-| updated_by  | varchar(255)                  | NO   |     | NULL              |                                               |
-| updated_at  | timestamp                     | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED on update CURRENT_TIMESTAMP |
-+-------------+-------------------------------+------+-----+-------------------+-----------------------------------------------+
-```
+| entity_type | enum('SHEET','CELL')          | NO   |
