@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import java.util.List;
 import java.util.Optional;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/cells")
@@ -27,26 +28,30 @@ public class CellController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CellDTO>> getCellsBySheetId(@RequestParam Integer sheetId) {
-        Sheet sheet = sheetService.getSheetById(sheetId)
-                .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + sheetId + " not found."));
-        List<CellDTO> cellDTOs = cellService.getCellsBySheet(sheet).stream().map(CellDTO::new).toList();
-        return ResponseEntity.ok(cellDTOs);
+    public ResponseEntity<Object> getCellsBySheetId(@RequestParam Integer sheetId) {
+        try {
+            Sheet sheet = sheetService.getSheetById(sheetId)
+                    .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + sheetId + " not found."));
+            List<CellDTO> cellDTOs = cellService.getCellsBySheet(sheet).stream().map(CellDTO::new).collect(Collectors.toList());
+            return ResponseEntity.ok(Map.of("status", 200, "data", cellDTOs));
+        } catch (SheetNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("status", 404, "error", "Not Found", "message", e.getMessage(), "path", "/cells"));
+        }
     }
 
     @GetMapping("/{sheetId}/{rowNum}/{colNum}")
     public ResponseEntity<Object> getCellBySheetRowCol(@PathVariable int sheetId, @PathVariable int rowNum, @PathVariable String colNum) {
-        Sheet sheet = sheetService.getSheetById(sheetId)
-                .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + sheetId + " not found."));
-        Optional<Cell> cell = cellService.getCellBySheetRowCol(sheet, rowNum, colNum);
-
-        return cell.map(c -> ResponseEntity.ok((Object) new CellDTO(c))) 
-            .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of(
-                    "status", 404,
-                    "error", "Not Found",
-                    "message", "Cell not found for Sheet ID " + sheetId + ", Row " + rowNum + ", Column " + colNum,
-                    "path", "/cells/" + sheetId + "/" + rowNum + "/" + colNum)));
+        try {
+            Sheet sheet = sheetService.getSheetById(sheetId)
+                    .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + sheetId + " not found."));
+            Cell cell = cellService.getCellBySheetRowCol(sheet, rowNum, colNum)
+                    .orElseThrow(() -> new CellNotFoundException("Cell not found for Sheet ID " + sheetId + ", Row " + rowNum + ", Column " + colNum));
+            return ResponseEntity.ok(Map.of("status", 200, "data", new CellDTO(cell)));
+        } catch (SheetNotFoundException | CellNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("status", 404, "error", "Not Found", "message", e.getMessage(), "path", "/cells"));
+        }
     }
 
     @PostMapping
@@ -54,23 +59,21 @@ public class CellController {
         try {
             Map<String, Object> sheetMap = (Map<String, Object>) requestBody.get("sheet");
             if (sheetMap == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("status", 400, "error", "Bad Request", "message", "Sheet object is required.", "path", "/cells"));
+                throw new IllegalArgumentException("Sheet object is required.");
             }
 
-            Integer sheetId = sheetMap.get("sheetId") != null ? (Integer) sheetMap.get("sheetId") : null;
-            String sheetName = sheetMap.get("name") != null ? (String) sheetMap.get("name") : null;
+            Integer sheetId = (Integer) sheetMap.get("sheetId");
+            String sheetName = (String) sheetMap.get("name");
 
             Sheet sheet;
             if (sheetId != null) {
                 sheet = sheetService.getSheetById(sheetId)
-                    .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + sheetId + " not found."));
+                        .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + sheetId + " not found."));
             } else if (sheetName != null) {
                 sheet = sheetService.getSheetByName(sheetName)
-                    .orElseThrow(() -> new SheetNotFoundException("Sheet with name \"" + sheetName + "\" not found."));
+                        .orElseThrow(() -> new SheetNotFoundException("Sheet with name \"" + sheetName + "\" not found."));
             } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("status", 400, "error", "Bad Request", "message", "Either sheetId or name must be provided.", "path", "/cells"));
+                throw new IllegalArgumentException("Either sheetId or name must be provided.");
             }
 
             Integer rowNum = (Integer) requestBody.get("rowNum");
@@ -79,31 +82,25 @@ public class CellController {
             String formula = (String) requestBody.getOrDefault("formula", null);
 
             if (rowNum == null || colNum == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("status", 400, "error", "Bad Request", "message", "Row number and column number are required.", "path", "/cells"));
+                throw new IllegalArgumentException("Row number and column number are required.");
             }
 
-            Cell cell = new Cell();
-            cell.setSheet(sheet);
-            cell.setRowNum(rowNum);
-            cell.setColNum(colNum);
-            cell.setValue(value);
-            cell.setFormula(formula);
-
+            Cell cell = new Cell(sheet, rowNum, colNum, value, formula);
             Cell createdCell = cellService.createOrUpdateCell(cell);
-            return ResponseEntity.ok(new CellDTO(createdCell));
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of("status", 201, "data", new CellDTO(createdCell)));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("status", 400, "error", "Bad Request", "message", e.getMessage(), "path", "/cells"));
+                    .body(Map.of("status", 400, "error", "Bad Request", "message", e.getMessage(), "path", "/cells"));
         } catch (SheetNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("status", 404, "error", "Not Found", "message", e.getMessage(), "path", "/cells"));
+                    .body(Map.of("status", 404, "error", "Not Found", "message", e.getMessage(), "path", "/cells"));
         }
     }
 
     @PutMapping
     public ResponseEntity<Object> updateCell(@RequestBody Map<String, Object> requestBody) {
-        return createOrUpdateCell(requestBody); // Calls the same logic as POST
+        return createOrUpdateCell(requestBody);
     }
 
     @DeleteMapping
@@ -112,7 +109,8 @@ public class CellController {
             Sheet sheet = sheetService.getSheetById(sheetId)
                     .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + sheetId + " not found."));
             cellService.deleteCell(sheet, rowNum, colNum);
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                    .body(Map.of("status", 204, "message", "Cell deleted successfully"));
         } catch (CellNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("status", 404, "error", "Not Found", "message", e.getMessage(), "path", "/cells"));

@@ -29,4 +29,12 @@ public class Cell {
 
     @Lob
     private String formula;
+
+    public Cell(Sheet sheet, Integer rowNum, String colNum, String value, String formula) {
+        this.sheet = sheet;
+        this.rowNum = rowNum;
+        this.colNum = colNum;
+        this.value = value;
+        this.formula = formula;
+    }
 }
