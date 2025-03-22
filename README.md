@@ -81,6 +81,7 @@ curl -X DELETE "http://localhost:8080/sheets/2"
   "status": 200,
   "message": "Sheet deleted successfully"
 }
+```
 
 ### **Get All Sheets (Only `sheet1-updated` Should Exist)**
 ```sh
