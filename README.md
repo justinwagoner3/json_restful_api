@@ -75,7 +75,12 @@ curl -X GET "http://localhost:8080/sheets/1"
 ```sh
 curl -X DELETE "http://localhost:8080/sheets/2"
 ```
-#### **Expected Response (204 No Content)**
+#### **Expected Response (200 OK)**
+```json
+{
+  "status": 200,
+  "message": "Sheet deleted successfully"
+}
 
 ### **Get All Sheets (Only `sheet1-updated` Should Exist)**
 ```sh
