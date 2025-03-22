@@ -110,8 +110,7 @@ public class SheetController {
     public ResponseEntity<Object> deleteSheet(@PathVariable int id) {
         try {
             sheetService.deleteSheet(id);
-            return ResponseEntity.status(HttpStatus.NO_CONTENT)
-                    .body(Map.of("status", 204, "message", "Sheet deleted successfully"));
+            return ResponseEntity.ok(Map.of("status", 200, "message", "Sheet deleted successfully"));
         } catch (SheetNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of(
