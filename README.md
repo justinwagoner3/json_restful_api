@@ -151,6 +151,37 @@ curl -X POST "http://localhost:8080/cells" \
 }
 ```
 
+### **Update A2 to a New Value (Triggers A3 to Update)**
+```sh
+curl -X PUT "http://localhost:8080/cells" \
+     -H "Content-Type: application/json" \
+     -d '{ 
+           "sheet": { "name": "sheet1-updated" },
+           "rowNum": 2,
+           "colNum": "A",
+           "value": "5"
+         }'
+```
+
+### **Verify that A3 Now Shows `13.0` (8 + 5)**
+```sh
+curl -X GET "http://localhost:8080/cells/1/3/A"
+```
+#### **Expected Response (200 OK)**
+```json
+{
+  "status": 200,
+  "data": {
+    "id": 3,
+    "sheetId": 1,
+    "rowNum": 3,
+    "colNum": "A",
+    "value": "13.0",
+    "formula": "=A1+A2"
+  }
+}
+```
+
 ### **Try Creating a Cell in a Non-Existent Sheet**
 ```sh
 curl -X POST "http://localhost:8080/cells" \
@@ -173,54 +204,6 @@ curl -X POST "http://localhost:8080/cells" \
 }
 ```
 
-### **Get All Cells in `sheet1-updated`**
-```sh
-curl -X GET "http://localhost:8080/cells?sheetId=1"
-```
-#### **Expected Response (200 OK)**
-```json
-{
-  "status": 200,
-  "data": [
-    {
-      "id": 1,
-      "sheetId": 1,
-      "rowNum": 1,
-      "colNum": "A",
-      "value": "First Cell",
-      "formula": "=SUM(A1:A10)"
-    }
-  ]
-}
-```
-
-### **Update Cell Value in `sheet1-updated`**
-```sh
-curl -X PUT "http://localhost:8080/cells" \
-     -H "Content-Type: application/json" \
-     -d '{ 
-           "sheet": { "name": "sheet1-updated" },
-           "rowNum": 1,
-           "colNum": "A",
-           "value": "Updated Cell",
-           "formula": ""
-         }'
-```
-#### **Expected Response (200 OK)**
-```json
-{
-  "status": 200,
-  "data": {
-    "id": 1,
-    "sheetId": 1,
-    "rowNum": 1,
-    "colNum": "A",
-    "value": "Updated Cell",
-    "formula": ""
-  }
-}
-```
-
 ### **Delete Cell from `sheet1-updated`**
 ```sh
 curl -X DELETE "http://localhost:8080/cells" \
@@ -237,23 +220,6 @@ curl -X DELETE "http://localhost:8080/cells" \
   "status": 200,
   "message": "Cell deleted successfully"
 }
-```json
-{
-  "status": 204,
-  "message": "Cell deleted successfully"
-}
-```
-
-### **Final Check: Get All Cells (Should be Empty)**
-```sh
-curl -X GET "http://localhost:8080/cells?sheetId=1"
-```
-#### **Expected Response (200 OK)**
-```json
-{
-  "status": 200,
-  "data": []
-}
 ```
 
 ---
@@ -262,6 +228,7 @@ curl -X GET "http://localhost:8080/cells?sheetId=1"
 ✅ Creating, updating, retrieving, and deleting **sheets**.  
 ✅ Creating, updating, retrieving, and deleting **cells**.  
 ✅ Error handling for **nonexistent sheets**.  
+✅ **Formula dependency tracking**: changes in A1/A2 update A3.  
 ✅ Final verification to confirm changes.  
 
 This guide provides a **quick and structured** way to showcase API functionality in an interview. 🚀
