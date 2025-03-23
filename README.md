@@ -214,7 +214,7 @@ curl -X DELETE "http://localhost:8080/cells" \
 #### **Expected Response (204 No Content)**
 ```json
 {
-  "status": 204,
+  "status": 200,
   "message": "Cell deleted successfully"
 }
 ```

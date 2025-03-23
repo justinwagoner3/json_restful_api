@@ -104,14 +104,40 @@ public class CellController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Object> deleteCell(@RequestParam Integer sheetId, @RequestParam Integer rowNum, @RequestParam String colNum) {
+    public ResponseEntity<Object> deleteCell(@RequestBody Map<String, Object> requestBody) {
         try {
-            Sheet sheet = sheetService.getSheetById(sheetId)
+            Map<String, Object> sheetMap = (Map<String, Object>) requestBody.get("sheet");
+            if (sheetMap == null) {
+                throw new IllegalArgumentException("Sheet object is required.");
+            }
+
+            Integer sheetId = sheetMap.get("sheetId") != null ? (Integer) sheetMap.get("sheetId") : null;
+            String sheetName = (String) sheetMap.get("name");
+
+            Sheet sheet;
+            if (sheetId != null) {
+                sheet = sheetService.getSheetById(sheetId)
                     .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + sheetId + " not found."));
+            } else if (sheetName != null) {
+                sheet = sheetService.getSheetByName(sheetName)
+                    .orElseThrow(() -> new SheetNotFoundException("Sheet with name \"" + sheetName + "\" not found."));
+            } else {
+                throw new IllegalArgumentException("Either sheetId or name must be provided.");
+            }
+
+            Integer rowNum = (Integer) requestBody.get("rowNum");
+            String colNum = (String) requestBody.get("colNum");
+
+            if (rowNum == null || colNum == null) {
+                throw new IllegalArgumentException("Row number and column number are required.");
+            }
+
             cellService.deleteCell(sheet, rowNum, colNum);
-            return ResponseEntity.status(HttpStatus.NO_CONTENT)
-                    .body(Map.of("status", 204, "message", "Cell deleted successfully"));
-        } catch (CellNotFoundException e) {
+            return ResponseEntity.ok(Map.of("status", 200, "message", "Cell deleted successfully"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("status", 400, "error", "Bad Request", "message", e.getMessage(), "path", "/cells"));
+        } catch (SheetNotFoundException | CellNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("status", 404, "error", "Not Found", "message", e.getMessage(), "path", "/cells"));
         }
