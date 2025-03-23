@@ -81,7 +81,6 @@ curl -X DELETE "http://localhost:8080/sheets/2"
   "status": 200,
   "message": "Sheet deleted successfully"
 }
-```
 
 ### **Get All Sheets (Only `sheet1-updated` Should Exist)**
 ```sh
@@ -104,7 +103,7 @@ curl -X GET "http://localhost:8080/sheets"
 
 ## **2️⃣ Cells API Operations**
 
-### **Create a Cell in `sheet1-updated`**
+### **Create Cells A1 and A2 in `sheet1-updated`**
 ```sh
 curl -X POST "http://localhost:8080/cells" \
      -H "Content-Type: application/json" \
@@ -112,8 +111,28 @@ curl -X POST "http://localhost:8080/cells" \
            "sheet": { "name": "sheet1-updated" },
            "rowNum": 1,
            "colNum": "A",
-           "value": "First Cell",
-           "formula": "=SUM(A1:A10)"
+           "value": "8"
+         }'
+
+curl -X POST "http://localhost:8080/cells" \
+     -H "Content-Type: application/json" \
+     -d '{ 
+           "sheet": { "name": "sheet1-updated" },
+           "rowNum": 2,
+           "colNum": "A",
+           "value": "18"
+         }'
+```
+
+### **Create a Formula Cell `=A1+A2` in Row 3**
+```sh
+curl -X POST "http://localhost:8080/cells" \
+     -H "Content-Type: application/json" \
+     -d '{ 
+           "sheet": { "name": "sheet1-updated" },
+           "rowNum": 3,
+           "colNum": "A",
+           "formula": "=A1+A2"
          }'
 ```
 #### **Expected Response (201 Created)**
@@ -121,12 +140,12 @@ curl -X POST "http://localhost:8080/cells" \
 {
   "status": 201,
   "data": {
-    "id": 1,
+    "id": 3,
     "sheetId": 1,
-    "rowNum": 1,
+    "rowNum": 3,
     "colNum": "A",
-    "value": "First Cell",
-    "formula": "=SUM(A1:A10)"
+    "value": "26.0",
+    "formula": "=A1+A2"
   }
 }
 ```
@@ -211,10 +230,15 @@ curl -X DELETE "http://localhost:8080/cells" \
            "colNum": "A"
          }'
 ```
-#### **Expected Response (204 No Content)**
+#### **Expected Response (200 OK)**
 ```json
 {
   "status": 200,
+  "message": "Cell deleted successfully"
+}
+```json
+{
+  "status": 204,
   "message": "Cell deleted successfully"
 }
 ```
@@ -279,4 +303,14 @@ mysql> desc activity_log;
 | Field       | Type                          | Null | Key | Default           | Extra                                         |
 +-------------+-------------------------------+------+-----+-------------------+-----------------------------------------------+
 | id          | int                           | NO   | PRI | NULL              | auto_increment                                |
-| entity_type | enum('SHEET','CELL')          | NO   |
+| entity_type | enum('SHEET','CELL')          | NO   |     | NULL              |                                               |
+| operation   | enum('ADD','UPDATE','DELETE') | NO   |     | NULL              |                                               |
+| sheet_id    | int                           | NO   | MUL | NULL              |                                               |
+| row_num     | int                           | YES  |     | NULL              |                                               |
+| col_num     | varchar(10)                   | YES  |     | NULL              |                                               |
+| value       | text                          | NO   |     | NULL              |                                               |
+| formula     | text                          | YES  |     | NULL              |                                               |
+| updated_by  | varchar(255)                  | NO   |     | NULL              |                                               |
+| updated_at  | timestamp                     | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED on update CURRENT_TIMESTAMP |
++-------------+-------------------------------+------+-----+-------------------+-----------------------------------------------+
+```
