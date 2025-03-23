@@ -38,39 +38,57 @@ public class CellService {
 
     @Transactional
     public Cell createOrUpdateCell(Cell cell) {
-        if (cell.getSheet() == null || cell.getRowNum() == null || cell.getColNum() == null) {
-            throw new IllegalArgumentException("Sheet, row number, and column number are required.");
+        // Check for formula and compute value if needed
+        if (cell.getFormula() != null && cell.getFormula().startsWith("=")) {
+            String computedValue = evaluateFormula(cell.getSheet(), cell.getFormula().substring(1));
+            cell.setValue(computedValue);
         }
 
-        // Ensure the sheet exists
-        Sheet sheet = sheetRepository.findById(cell.getSheet().getId())
-                .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + cell.getSheet().getId() + " not found."));
+        Optional<Cell> existing = getCellBySheetRowCol(cell.getSheet(), cell.getRowNum(), cell.getColNum());
 
-        cell.setSheet(sheet); // Ensures the reference is valid
+        if (existing.isPresent()) {
+            Cell toUpdate = existing.get();
+            toUpdate.setValue(cell.getValue());
+            toUpdate.setFormula(cell.getFormula());
+            return cellRepository.save(toUpdate);
+        } else {
+            return cellRepository.save(cell);
+        }
+    }
 
-        // Check if cell exists
-        Optional<Cell> existingCell = cellRepository.findBySheetAndRowNumAndColNum(sheet, cell.getRowNum(), cell.getColNum());
+    private String evaluateFormula(Sheet sheet, String expression) {
+        // Only support "A1 + A2" for now
+        String[] tokens = expression.split("(?=[+\\-*/])|(?<=[+\\-*/])");
 
-        if (existingCell.isPresent()) {
-            Cell updatedCell = existingCell.get();
-            updatedCell.setValue(cell.getValue());
-            updatedCell.setFormula(cell.getFormula());
+        if (tokens.length != 3)
+            throw new IllegalArgumentException("Only simple binary operations like A1+A2 are supported.");
 
-            if ((cell.getValue() == null || cell.getValue().trim().isEmpty()) &&
-                (cell.getFormula() == null || cell.getFormula().trim().isEmpty())) {
-                deleteCell(sheet, cell.getRowNum(), cell.getColNum());
-                return null;
-            }
+        String ref1 = tokens[0].trim();
+        String operator = tokens[1].trim();
+        String ref2 = tokens[2].trim();
 
-            activityLogService.logActivity(sheet, cell.getRowNum(), cell.getColNum(), cell.getValue(),
-                    cell.getFormula(), "system", ActivityLog.OperationType.UPDATE, ActivityLog.EntityType.CELL);
-            return cellRepository.save(updatedCell);
+        String col1 = ref1.replaceAll("\\d", "");
+        int row1 = Integer.parseInt(ref1.replaceAll("\\D", ""));
+
+        String col2 = ref2.replaceAll("\\d", "");
+        int row2 = Integer.parseInt(ref2.replaceAll("\\D", ""));
+
+        String val1 = getCellBySheetRowCol(sheet, row1, col1).map(Cell::getValue).orElse("0");
+        String val2 = getCellBySheetRowCol(sheet, row2, col2).map(Cell::getValue).orElse("0");
+
+        double num1 = Double.parseDouble(val1);
+        double num2 = Double.parseDouble(val2);
+        double result;
+
+        switch (operator) {
+            case "+": result = num1 + num2; break;
+            case "-": result = num1 - num2; break;
+            case "*": result = num1 * num2; break;
+            case "/": result = (num2 != 0) ? num1 / num2 : 0; break;
+            default: throw new IllegalArgumentException("Unsupported operator: " + operator);
         }
 
-        // New cell creation
-        activityLogService.logActivity(sheet, cell.getRowNum(), cell.getColNum(), cell.getValue(),
-                cell.getFormula(), "system", ActivityLog.OperationType.ADD, ActivityLog.EntityType.CELL);
-        return cellRepository.save(cell);
+        return String.valueOf(result);
     }
 
     @Transactional
