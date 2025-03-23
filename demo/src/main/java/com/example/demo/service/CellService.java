@@ -14,54 +14,98 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+import java.util.*;
+import java.util.regex.*;
+
 @Service
 public class CellService {
     private final CellRepository cellRepository;
-    private final SheetRepository sheetRepository;
-    private final ActivityLogRepository activityLogRepository;
-    private final ActivityLogService activityLogService;
+    private final SheetService sheetService;
 
-    public CellService(CellRepository cellRepository, SheetRepository sheetRepository, ActivityLogRepository activityLogRepository, ActivityLogService activityLogService) {
+    // key: A1, value: set of dependent cells (like A3, A5)
+    private final Map<String, Set<String>> dependencyGraph = new HashMap<>();
+
+    public CellService(CellRepository cellRepository, SheetService sheetService) {
         this.cellRepository = cellRepository;
-        this.sheetRepository = sheetRepository;
-        this.activityLogRepository = activityLogRepository;
-        this.activityLogService = activityLogService;
+        this.sheetService = sheetService;
     }
 
-    public List<Cell> getCellsBySheet(Sheet sheet) {
-        return cellRepository.findBySheet(sheet);
-    }
-
-    public Optional<Cell> getCellBySheetRowCol(Sheet sheet, int rowNum, String colNum) {
-        return cellRepository.findBySheetAndRowNumAndColNum(sheet, rowNum, colNum);
-    }
-
-    @Transactional
     public Cell createOrUpdateCell(Cell cell) {
-        // Check for formula and compute value if needed
+        String cellKey = cellKey(cell);
+
         if (cell.getFormula() != null && cell.getFormula().startsWith("=")) {
+            registerDependencies(cellKey, cell.getFormula());
             String computedValue = evaluateFormula(cell.getSheet(), cell.getFormula().substring(1));
             cell.setValue(computedValue);
         }
 
         Optional<Cell> existing = getCellBySheetRowCol(cell.getSheet(), cell.getRowNum(), cell.getColNum());
 
+        Cell result;
         if (existing.isPresent()) {
             Cell toUpdate = existing.get();
             toUpdate.setValue(cell.getValue());
             toUpdate.setFormula(cell.getFormula());
-            return cellRepository.save(toUpdate);
+            result = cellRepository.save(toUpdate);
         } else {
-            return cellRepository.save(cell);
+            result = cellRepository.save(cell);
+        }
+
+        recalculateDependents(cellKey, cell.getSheet());
+        return result;
+    }
+
+    private void registerDependencies(String cellKey, String formula) {
+        Set<String> refs = extractCellRefs(formula);
+        for (String ref : refs) {
+            dependencyGraph.computeIfAbsent(ref, k -> new HashSet<>()).add(cellKey);
         }
     }
 
-    private String evaluateFormula(Sheet sheet, String expression) {
-        // Only support "A1 + A2" for now
-        String[] tokens = expression.split("(?=[+\\-*/])|(?<=[+\\-*/])");
+    private Set<String> extractCellRefs(String formula) {
+        Set<String> refs = new HashSet<>();
+        Matcher matcher = Pattern.compile("[A-Z]+[0-9]+").matcher(formula);
+        while (matcher.find()) {
+            refs.add(matcher.group());
+        }
+        return refs;
+    }
 
-        if (tokens.length != 3)
-            throw new IllegalArgumentException("Only simple binary operations like A1+A2 are supported.");
+    private void recalculateDependents(String changedCellKey, Sheet sheet) {
+        Queue<String> queue = new LinkedList<>();
+        Set<String> visited = new HashSet<>();
+        queue.add(changedCellKey);
+
+        while (!queue.isEmpty()) {
+            String current = queue.poll();
+            Set<String> dependents = dependencyGraph.getOrDefault(current, Set.of());
+
+            for (String dep : dependents) {
+                if (!visited.add(dep)) continue;
+                Cell depCell = getCell(sheet, dep);
+                if (depCell != null && depCell.getFormula() != null) {
+                    String newValue = evaluateFormula(sheet, depCell.getFormula().substring(1));
+                    depCell.setValue(newValue);
+                    cellRepository.save(depCell);
+                }
+                queue.add(dep);
+            }
+        }
+    }
+
+    private Cell getCell(Sheet sheet, String cellKey) {
+        String col = cellKey.replaceAll("\\d", "");
+        int row = Integer.parseInt(cellKey.replaceAll("\\D", ""));
+        return getCellBySheetRowCol(sheet, row, col).orElse(null);
+    }
+
+    private String cellKey(Cell cell) {
+        return cell.getColNum() + cell.getRowNum();
+    }
+
+    private String evaluateFormula(Sheet sheet, String expression) {
+        String[] tokens = expression.split("(?=[+\\-*/])|(?<=[+\\-*/])");
+        if (tokens.length != 3) throw new IllegalArgumentException("Only simple formulas like A1+A2 are supported.");
 
         String ref1 = tokens[0].trim();
         String operator = tokens[1].trim();
@@ -69,7 +113,6 @@ public class CellService {
 
         String col1 = ref1.replaceAll("\\d", "");
         int row1 = Integer.parseInt(ref1.replaceAll("\\D", ""));
-
         String col2 = ref2.replaceAll("\\d", "");
         int row2 = Integer.parseInt(ref2.replaceAll("\\D", ""));
 
@@ -91,16 +134,19 @@ public class CellService {
         return String.valueOf(result);
     }
 
-    @Transactional
-    public void deleteCell(Sheet sheet, int rowNum, String colNum) {
-        Optional<Cell> cell = cellRepository.findBySheetAndRowNumAndColNum(sheet, rowNum, colNum);
-
-        if (cell.isPresent()) {
-            activityLogService.logActivity(sheet, rowNum, colNum, cell.get().getValue(),
-                    cell.get().getFormula(), "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.CELL);
-            cellRepository.delete(cell.get());
-        } else {
-            throw new CellNotFoundException("Cell not found for Sheet ID " + sheet.getId() + ", Row " + rowNum + ", Column " + colNum);
-        }
+    // Existing method you already have
+    public Optional<Cell> getCellBySheetRowCol(Sheet sheet, int rowNum, String colNum) {
+        return cellRepository.findBySheetAndRowNumAndColNum(sheet, rowNum, colNum);
     }
+
+    public List<Cell> getCellsBySheet(Sheet sheet) {
+        return cellRepository.findBySheet(sheet);
+    }
+
+    public void deleteCell(Sheet sheet, Integer rowNum, String colNum) {
+        Cell cell = cellRepository.findBySheetAndRowNumAndColNum(sheet, rowNum, colNum)
+            .orElseThrow(() -> new CellNotFoundException("Cell not found for deletion."));
+        cellRepository.delete(cell);
+    }
+
 }
