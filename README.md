@@ -89,40 +89,40 @@ Represents a history of operations performed on sheets or cells. This table can 
 
 ## Sheet Endpoints
 
-- `GET /sheets`  
-  Returns all sheets
+### `GET /sheets`  
+Returns all sheets
 
-- `GET /sheets/{id}`  
+### `GET /sheets/{id}`  
   Returns sheet by ID
 
-- `POST /sheets`  
+### `POST /sheets`  
   Creates a new sheet  
   **Body:**
   ```json
   { "name": "sheet1" }
   ```
 
-- `PUT /sheets/{id}`  
+### `PUT /sheets/{id}`  
   Updates sheet name  
   **Body:**
   ```json
   { "name": "new-name" }
   ```
 
-- `DELETE /sheets/{id}`  
+### `DELETE /sheets/{id}`  
   Deletes a sheet by ID
 
 ---
 
 ## Cell Endpoints
 
-- `GET /cells?sheetId=1`  
+### `GET /cells?sheetId=1`  
   Returns all cells in a sheet
 
-- `GET /cells/{id}`  
+### `GET /cells/{id}`  
   Returns cell by ID
 
-- `POST /cells`  
+### `POST /cells`  
   Creates a new cell  
   **Body:**
   ```json
@@ -135,7 +135,7 @@ Represents a history of operations performed on sheets or cells. This table can 
   }
   ```
 
-- `PUT /cells/{id}`  
+### `PUT /cells/{id}`  
   Updates a cell’s value or formula  
   **Body:**
   ```json
@@ -145,7 +145,7 @@ Represents a history of operations performed on sheets or cells. This table can 
   }
   ```
 
-- `DELETE /cells/{id}`  
+### `DELETE /cells/{id}`  
   Deletes a cell
 
 ---
