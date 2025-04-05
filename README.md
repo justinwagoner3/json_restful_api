@@ -155,15 +155,15 @@ Represents a history of operations performed on sheets or cells. This table can 
 
 This guide demonstrates how to interact with the REST API, showcasing CRUD operations for sheets and cells.
 
-## ** Sheets API Operations**
+## Sheets API Operations
 
-### **Create Sheet 1 (`sheet1`)**
+### Create Sheet 1 (`sheet1`)
 ```sh
 curl -X POST "http://localhost:8080/sheets" \
      -H "Content-Type: application/json" \
      -d '{ "name": "sheet1" }'
 ```
-#### **Expected Response (201 Created)**
+#### Expected Response (201 Created)
 ```json
 {
   "status": 201,
@@ -174,13 +174,13 @@ curl -X POST "http://localhost:8080/sheets" \
 }
 ```
 
-### **Create Sheet 2 (`sheet2`)**
+### Create Sheet 2 (`sheet2`)
 ```sh
 curl -X POST "http://localhost:8080/sheets" \
      -H "Content-Type: application/json" \
      -d '{ "name": "sheet2" }'
 ```
-#### **Expected Response (201 Created)**
+#### Expected Response (201 Created)
 ```json
 {
   "status": 201,
@@ -191,13 +191,13 @@ curl -X POST "http://localhost:8080/sheets" \
 }
 ```
 
-### **Update `sheet1` to `sheet1-updated`**
+### Update `sheet1` to `sheet1-updated`
 ```sh
 curl -X PUT "http://localhost:8080/sheets/1" \
      -H "Content-Type: application/json" \
      -d '{ "name": "sheet1-updated" }'
 ```
-#### **Expected Response (200 OK)**
+#### Expected Response (200 OK)
 ```json
 {
   "status": 200,
@@ -208,11 +208,11 @@ curl -X PUT "http://localhost:8080/sheets/1" \
 }
 ```
 
-### **Get Sheet by ID (`sheet1-updated`)**
+### Get Sheet by ID (`sheet1-updated`)
 ```sh
 curl -X GET "http://localhost:8080/sheets/1"
 ```
-#### **Expected Response (200 OK)**
+#### Expected Response (200 OK)
 ```json
 {
   "status": 200,
@@ -223,11 +223,11 @@ curl -X GET "http://localhost:8080/sheets/1"
 }
 ```
 
-### **Delete `sheet2`**
+### Delete `sheet2`
 ```sh
 curl -X DELETE "http://localhost:8080/sheets/2"
 ```
-#### **Expected Response (200 OK)**
+#### Expected Response (200 OK)
 ```json
 {
   "status": 200,
@@ -235,11 +235,11 @@ curl -X DELETE "http://localhost:8080/sheets/2"
 }
 ```
 
-### **Get All Sheets (Only `sheet1-updated` Should Exist)**
+### Get All Sheets (Only `sheet1-updated` Should Exist)
 ```sh
 curl -X GET "http://localhost:8080/sheets"
 ```
-#### **Expected Response (200 OK)**
+#### Expected Response (200 OK)
 ```json
 {
   "status": 200,
@@ -254,9 +254,9 @@ curl -X GET "http://localhost:8080/sheets"
 
 ---
 
-## ** Cells API Operations**
+## Cells API Operations
 
-### **Create Cells A1 and A2 in `sheet1-updated`**
+### Create Cells A1 and A2 in `sheet1-updated`
 ```sh
 curl -X POST "http://localhost:8080/cells" \
      -H "Content-Type: application/json" \
@@ -277,7 +277,7 @@ curl -X POST "http://localhost:8080/cells" \
          }'
 ```
 
-### **Create a Formula Cell `=A1+A2` in Row 3**
+### Create a Formula Cell `=A1+A2` in Row 3
 ```sh
 curl -X POST "http://localhost:8080/cells" \
      -H "Content-Type: application/json" \
@@ -288,7 +288,7 @@ curl -X POST "http://localhost:8080/cells" \
            "formula": "=A1+A2"
          }'
 ```
-#### **Expected Response (201 Created)**
+#### Expected Response (201 Created)
 ```json
 {
   "status": 201,
@@ -303,7 +303,7 @@ curl -X POST "http://localhost:8080/cells" \
 }
 ```
 
-### **Update A2 to a New Value (Triggers A3 to Update)**
+### Update A2 to a New Value (Triggers A3 to Update)
 ```sh
 curl -X PUT "http://localhost:8080/cells" \
      -H "Content-Type: application/json" \
@@ -315,11 +315,11 @@ curl -X PUT "http://localhost:8080/cells" \
          }'
 ```
 
-### **Verify that A3 Now Shows `13.0` (8 + 5)**
+### Verify that A3 Now Shows `13.0` (8 + 5)
 ```sh
 curl -X GET "http://localhost:8080/cells/1/3/A"
 ```
-#### **Expected Response (200 OK)**
+#### Expected Response (200 OK)
 ```json
 {
   "status": 200,
@@ -334,7 +334,7 @@ curl -X GET "http://localhost:8080/cells/1/3/A"
 }
 ```
 
-### **Try Creating a Cell in a Non-Existent Sheet**
+### Try Creating a Cell in a Non-Existent Sheet
 ```sh
 curl -X POST "http://localhost:8080/cells" \
      -H "Content-Type: application/json" \
@@ -346,7 +346,7 @@ curl -X POST "http://localhost:8080/cells" \
            "formula": ""
          }'
 ```
-#### **Expected Response (404 Not Found)**
+#### Expected Response (404 Not Found)
 ```json
 {
   "status": 404,
@@ -356,7 +356,7 @@ curl -X POST "http://localhost:8080/cells" \
 }
 ```
 
-### **Delete Cell from `sheet1-updated`**
+### Delete Cell from `sheet1-updated`
 ```sh
 curl -X DELETE "http://localhost:8080/cells" \
      -H "Content-Type: application/json" \
@@ -366,7 +366,7 @@ curl -X DELETE "http://localhost:8080/cells" \
            "colNum": "A"
          }'
 ```
-#### **Expected Response (200 OK)**
+#### Expected Response (200 OK)
 ```json
 {
   "status": 200,
@@ -376,7 +376,7 @@ curl -X DELETE "http://localhost:8080/cells" \
 
 ---
 
-## ** Summary of Features Demonstrated:**
+## Summary of Features Demonstrated
 * Creating, updating, retrieving, and deleting **sheets**.  
 * Creating, updating, retrieving, and deleting **cells**.  
 * Error handling for **nonexistent sheets**.  
