@@ -1,5 +1,4 @@
 # Overview
-
 This RESTful API provides CRUD operations for managing **Sheets** and **Cells**, similar to a basic spreadsheet application. Each **Sheet** acts as a container for **Cells**, which can hold raw values or formulas (e.g., `=A1 + B2`).
 
 The API is built using **Spring Boot** and exposes endpoints for:
@@ -7,22 +6,16 @@ The API is built using **Spring Boot** and exposes endpoints for:
 - Creating, reading, updating, and deleting Cells
 - Evaluating formulas with dependency tracking
 
----
-
 # Base URL
-
 ```
 http://localhost:8080
 ```
 
----
-
 # Resources
-# Packages
 
 * Spring Web (for REST API)
 * Spring Data JPA (for database interaction)
-* MySQL Driver (since the job description references MySQL)
+* MySQL Driver (for database)
 
 ## Sheet
 Represents a spreadsheet. A sheet can have multiple cells.
@@ -61,8 +54,6 @@ Represents a history of operations performed on sheets or cells. This table can 
 | updated_by  | varchar(255)                  | Identifier of the user or system that made the change                       |
 | updated_at  | timestamp                     | Timestamp of when the update occurred (auto-generated and auto-updated)     |
 
----
-
 # Capabilities
 
 - Create/read/update/delete Sheets and Cells
@@ -70,8 +61,6 @@ Represents a history of operations performed on sheets or cells. This table can 
 - Return structured JSON responses with status codes
 - No authentication currently required
 - No user-specific data segregation (multi-tenancy not implemented)
-
----
 
 # Common Status Codes
 
@@ -82,8 +71,6 @@ Represents a history of operations performed on sheets or cells. This table can 
 | 400 Bad Request | Invalid input       |
 | 404 Not Found | Sheet/Cell not found |
 | 500 Internal Server Error | Server error |
-
----
 
 # Endpoints
 
@@ -111,8 +98,6 @@ Returns all sheets
 
 ### `DELETE /sheets/{id}`  
   Deletes a sheet by ID
-
----
 
 ## Cell Endpoints
 
@@ -147,9 +132,6 @@ Returns all sheets
 
 ### `DELETE /cells/{id}`  
   Deletes a cell
-
----
-
 
 # Complete Walkthrough
 
@@ -251,8 +233,6 @@ curl -X GET "http://localhost:8080/sheets"
   ]
 }
 ```
-
----
 
 ## Cells API Operations
 
@@ -373,8 +353,6 @@ curl -X DELETE "http://localhost:8080/cells" \
   "message": "Cell deleted successfully"
 }
 ```
-
----
 
 ## Summary of Features Demonstrated
 * Creating, updating, retrieving, and deleting **sheets**.  
