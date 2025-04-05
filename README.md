@@ -138,18 +138,28 @@ Returns all sheets
   }
   ```
 
-### `PUT /cells/{id}`  
+### `PUT /cells`  
   Updates a cell’s value or formula  
   **Body:**
   ```json
   {
-    "value": "100",
-    "formula": "=A1+B1"
+    "sheet": { "name": "sheet1-updated" },
+    "rowNum": 2,
+    "colNum": "A",
+    "value": "5"
   }
   ```
 
-### `DELETE /cells/{id}`  
+### `DELETE /cells`  
   Deletes a cell
+  **Body:**
+  ```json
+  {
+    "sheet": { "name": "sheet1-updated" },
+    "rowNum": 1,
+    "colNum": "A"
+  }
+  ```
 
 # Complete Walkthrough
 
