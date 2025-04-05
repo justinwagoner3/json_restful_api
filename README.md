@@ -1,3 +1,21 @@
+# Table of Contents
+
+- [Overview](#overview)
+- [Base URL](#base-url)
+- [Resources](#resources)
+  - [Sheet](#sheet)
+  - [Cell](#cell)
+  - [Activity Log](#activity-log)
+- [Capabilities](#capabilities)
+- [Common Status Codes](#common-status-codes)
+- [Endpoints](#endpoints)
+  - [Sheet Endpoints](#sheet-endpoints)
+  - [Cell Endpoints](#cell-endpoints)
+- [Complete Walkthrough](#complete-walkthrough)
+  - [Sheets API Operations](#sheets-api-operations)
+  - [Cells API Operations](#cells-api-operations)
+  - [Summary of Features Demonstrated](#summary-of-features-demonstrated)
+
 # Overview
 This RESTful API provides CRUD operations for managing **Sheets** and **Cells**, similar to a basic spreadsheet application. Each **Sheet** acts as a container for **Cells**, which can hold raw values or formulas (e.g., `=A1 + B2`).
 
