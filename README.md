@@ -1,7 +1,10 @@
 # Table of Contents
 
 - [Overview](#overview)
-- [Base URL](#base-url)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Run with Docker](#run-with-docker)
+- [Tech Stack](#tech-stack)
 - [Resources](#resources)
   - [Sheet](#sheet)
   - [Cell](#cell)
@@ -24,16 +27,29 @@ The API is built using **Spring Boot** and exposes endpoints for:
 - Creating, reading, updating, and deleting Cells
 - Evaluating formulas with dependency tracking
 
-# Base URL
-```
-http://localhost:8080
+# Getting Started
+
+To run the API locally:
+
+## Prerequisites
+- Docker installed
+
+## Run with Docker
+```bash
+git clone https://github.com/justinwagoner3/json_restful_api.git
+cd json_restful_api/demo
+docker-compose up --build
 ```
 
-# Resources
+# Tech Stack
 
-* Spring Web (for REST API)
-* Spring Data JPA (for database interaction)
-* MySQL Driver (for database)
+- Docker / Docker Compose
+- Java 17
+- Spring Boot
+- Spring Data JPA
+- MySQL
+- Maven
+- RESTful API design
 
 ## Sheet
 Represents a spreadsheet. A sheet can have multiple cells.
@@ -49,9 +65,9 @@ Represents a single cell in a spreadsheet grid (like A1, B2, etc.).
 | Field     | Type   | Description                              |
 |-----------|--------|------------------------------------------|
 | id        | int    | Unique identifier                        |
-| sheetId   | int    | Foreign key to the sheet                 |
-| row       | int    | Row number (e.g., 1, 2)                  |
-| col       | string | Column name (e.g., A, B)                 |
+| sheet_id  | int    | Foreign key to the sheet                 |
+| row_num   | int    | Row number (e.g., 1, 2)                  |
+| col_num   | string | Column name (e.g., A, B)                 |
 | value     | string | Stored value or result of formula        |
 | formula   | string | Optional formula (e.g., `=A1+B1`)        |
 

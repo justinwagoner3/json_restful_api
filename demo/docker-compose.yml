@@ -1,0 +1,36 @@
+services:
+  mysql-demo:
+    image: mysql:8.0
+    container_name: demo-mysql-demo-1
+    environment:
+      MYSQL_DATABASE: demo_db
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: password123
+      MYSQL_ROOT_PASSWORD: rootpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - demo_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  sheets-api:
+    build: .
+    container_name: demo-sheets-api-1
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql-demo:
+        condition: service_healthy
+    restart: on-failure
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-demo:3306/demo_db
+      SPRING_DATASOURCE_USERNAME: appuser
+      SPRING_DATASOURCE_PASSWORD: password123
+
+volumes:
+  demo_mysql_data:
+
