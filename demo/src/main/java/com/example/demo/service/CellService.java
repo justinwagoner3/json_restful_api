@@ -21,13 +21,15 @@ import java.util.regex.*;
 public class CellService {
     private final CellRepository cellRepository;
     private final SheetService sheetService;
+    private final ActivityLogService activityLogService;
 
     // key: A1, value: set of dependent cells (like A3, A5)
     private final Map<String, Set<String>> dependencyGraph = new HashMap<>();
 
-    public CellService(CellRepository cellRepository, SheetService sheetService) {
+    public CellService(CellRepository cellRepository, SheetService sheetService, ActivityLogService activityLogService) {
         this.cellRepository = cellRepository;
         this.sheetService = sheetService;
+        this.activityLogService = activityLogService;
     }
 
     public Cell createOrUpdateCell(Cell cell) {
@@ -47,8 +49,11 @@ public class CellService {
             toUpdate.setValue(cell.getValue());
             toUpdate.setFormula(cell.getFormula());
             result = cellRepository.save(toUpdate);
+            activityLogService.logActivity(cell.getSheet().getId(), cell.getRowNum(), cell.getColNum(), cell.getValue(), cell.getFormula(), "system", ActivityLog.OperationType.UPDATE, ActivityLog.EntityType.CELL);
+
         } else {
             result = cellRepository.save(cell);
+            activityLogService.logActivity(cell.getSheet().getId(), cell.getRowNum(), cell.getColNum(), cell.getValue(), cell.getFormula(), "system", ActivityLog.OperationType.ADD, ActivityLog.EntityType.CELL);
         }
 
         recalculateDependents(cellKey, cell.getSheet());
@@ -146,6 +151,7 @@ public class CellService {
     public void deleteCell(Sheet sheet, Integer rowNum, String colNum) {
         Cell cell = cellRepository.findBySheetAndRowNumAndColNum(sheet, rowNum, colNum)
             .orElseThrow(() -> new CellNotFoundException("Cell not found for deletion."));
+        activityLogService.logActivity(sheet.getId(), rowNum, colNum, cell.getValue(), cell.getFormula(), "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.CELL);
         cellRepository.delete(cell);
     }
 
