@@ -29,7 +29,7 @@ The API is built using **Spring Boot** and exposes endpoints for:
 
 # Getting Started
 
-To run the API locally:
+To run the API locally (default port 8080):
 
 ## Prerequisites
 - Docker installed
@@ -39,6 +39,11 @@ To run the API locally:
 git clone https://github.com/justinwagoner3/json_restful_api.git
 cd json_restful_api/demo
 docker-compose up --build
+```
+
+## Database Connection
+```sh
+docker exec -it demo-mysql-demo-1 mysql -uappuser -ppassword123 demo_db
 ```
 
 # Tech Stack

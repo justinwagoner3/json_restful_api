@@ -16,9 +16,8 @@ public class ActivityLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name = "sheet_id", nullable = false)
-    private Sheet sheet;
+    @Column(name = "sheet_id") // this maps to the DB column
+    private Integer sheetId;
 
     private Integer rowNum; // Nullable since it's only used for cells
     private String colNum;  // Nullable since it's only used for cells

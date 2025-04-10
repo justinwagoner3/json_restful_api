@@ -44,7 +44,7 @@ public class SheetService {
             Sheet createdSheet = sheetRepository.save(sheet);
 
             // Log the creation with entityType = SHEET
-            activityLogService.logActivity(createdSheet, "system", ActivityLog.OperationType.ADD, ActivityLog.EntityType.SHEET);
+            activityLogService.logActivity(createdSheet.getId(), "system", ActivityLog.OperationType.ADD, ActivityLog.EntityType.SHEET);
 
             return createdSheet;
         } catch (DataIntegrityViolationException e) {
@@ -61,7 +61,7 @@ public class SheetService {
             Sheet updatedSheet = sheetRepository.save(sheet);
 
             // Log the update with entityType = SHEET
-            activityLogService.logActivity(updatedSheet, "system", ActivityLog.OperationType.UPDATE, ActivityLog.EntityType.SHEET);
+            activityLogService.logActivity(updatedSheet.getId(), "system", ActivityLog.OperationType.UPDATE, ActivityLog.EntityType.SHEET);
 
             return updatedSheet;
         }).orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + id + " not found, cannot UPDATE."));
@@ -71,9 +71,9 @@ public class SheetService {
         Sheet sheet = sheetRepository.findById(id)
             .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + id + " not found, cannot DELETE."));
 
-        sheetRepository.deleteById(id);
-
         // Log the deletion with entityType = SHEET
-        activityLogService.logActivity(sheet, "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.SHEET);
+        activityLogService.logActivity(sheet.getId(), "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.SHEET);
+
+        sheetRepository.deleteById(id);
     }
 }
