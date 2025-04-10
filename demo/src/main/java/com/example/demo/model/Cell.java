@@ -18,10 +18,10 @@ public class Cell {
     @JoinColumn(name = "sheet_id", nullable = false)
     private Sheet sheet;
 
-    @Column(nullable = false)
+    @Column(name = "row_num", nullable = false)
     private Integer rowNum;
 
-    @Column(nullable = false, length = 10)
+    @Column(name = "col_num", nullable = false, length = 10)
     private String colNum;
 
     @Lob

@@ -403,7 +403,7 @@ curl -X DELETE "http://localhost:8080/cells" \
 }
 ```
 
-## Database Result
+## Database Results
 ```
 mysql> select * from activity_log;
 +----+-------------+-----------+----------+---------+---------+----------------+---------+------------+---------------------+
