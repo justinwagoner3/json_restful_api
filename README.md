@@ -18,6 +18,9 @@
   - [Sheets API Operations](#sheets-api-operations)
   - [Cells API Operations](#cells-api-operations)
   - [Summary of Features Demonstrated](#summary-of-features-demonstrated)
+- [Review and Retrospect](#review-and-retrospect)
+  - [Indexes](#indexes)
+
 
 # Overview
 This RESTful API provides CRUD operations for managing **Sheets** and **Cells**, similar to a basic spreadsheet application. Each **Sheet** acts as a container for **Cells**, which can hold raw values or formulas (e.g., `=A1 + B2`).
@@ -429,11 +432,11 @@ mysql> select * from activity_log;
 * **Formula dependency tracking**: changes in A1/A2 update A3.  
 * Final verification to confirm changes.  
 
-## Review and Retrospect
+# Review and Retrospect
 
-### Indexes
+## Indexes
 
-#### Cells
+### Cells
 
 Considered adding the following indexes, but was unsure how often grouping this specific would be used:
 
