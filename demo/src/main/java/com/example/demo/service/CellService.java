@@ -152,7 +152,9 @@ public class CellService {
         Cell cell = cellRepository.findBySheetAndRowNumAndColNum(sheet, rowNum, colNum)
             .orElseThrow(() -> new CellNotFoundException("Cell not found for deletion."));
         activityLogService.logActivity(sheet.getId(), rowNum, colNum, cell.getValue(), cell.getFormula(), "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.CELL);
+    	String cellKey = cellKey(cell);
         cellRepository.delete(cell);
+        recalculateDependents(cellKey, sheet);
     }
 
 }

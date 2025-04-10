@@ -403,6 +403,25 @@ curl -X DELETE "http://localhost:8080/cells" \
 }
 ```
 
+## Database Result
+```
+mysql> select * from activity_log;
++----+-------------+-----------+----------+---------+---------+----------------+---------+------------+---------------------+
+| id | entity_type | operation | sheet_id | row_num | col_num | value          | formula | updated_by | updated_at          |
++----+-------------+-----------+----------+---------+---------+----------------+---------+------------+---------------------+
+|  1 | SHEET       | ADD       |        1 |    NULL | NULL    | sheet1         | NULL    | system     | 2025-04-10 23:21:03 |
+|  2 | SHEET       | ADD       |        2 |    NULL | NULL    | sheet2         | NULL    | system     | 2025-04-10 23:21:03 |
+|  3 | SHEET       | UPDATE    |        1 |    NULL | NULL    | sheet1-updated | NULL    | system     | 2025-04-10 23:21:03 |
+|  4 | SHEET       | DELETE    |        2 |    NULL | NULL    | sheet2         | NULL    | system     | 2025-04-10 23:21:03 |
+|  5 | CELL        | ADD       |        1 |       1 | A       | 8              | NULL    | system     | 2025-04-10 23:21:04 |
+|  6 | CELL        | ADD       |        1 |       2 | A       | 18             | NULL    | system     | 2025-04-10 23:21:04 |
+|  7 | CELL        | ADD       |        1 |       3 | A       | 26.0           | =A1+A2  | system     | 2025-04-10 23:21:04 |
+|  8 | CELL        | UPDATE    |        1 |       2 | A       | 5              | NULL    | system     | 2025-04-10 23:21:04 |
+|  9 | CELL        | DELETE    |        1 |       1 | A       | 8              | NULL    | system     | 2025-04-10 23:21:04 |
++----+-------------+-----------+----------+---------+---------+----------------+---------+------------+---------------------+
+9 rows in set (0.00 sec)
+```
+
 ## Summary of Features Demonstrated
 * Creating, updating, retrieving, and deleting **sheets**.  
 * Creating, updating, retrieving, and deleting **cells**.  
