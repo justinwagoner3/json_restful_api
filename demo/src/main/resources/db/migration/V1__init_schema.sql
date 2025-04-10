@@ -15,6 +15,9 @@ CREATE TABLE cells (
 	CONSTRAINT fk_sheet FOREIGN KEY (sheet_id) REFERENCES sheets(id) ON DELETE CASCADE
 );
 
+CREATE INDEX idx_cells_sheet ON cells(sheet_id);
+CREATE INDEX idx_cells_sheet_row_col ON cells(sheet_id, row_num, col_num);
+
 CREATE TABLE activity_log (
 	`id` INT AUTO_INCREMENT PRIMARY KEY,
 	`entity_type` VARCHAR(10) NOT NULL CHECK (entity_type IN ('SHEET', 'CELL')),
@@ -27,3 +30,8 @@ CREATE TABLE activity_log (
 	`updated_by` VARCHAR(255),
 	`updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+CREATE INDEX idx_activity_sheet ON activity_log(sheet_id);
+CREATE INDEX idx_activity_type ON activity_log(entity_type, operation);
+CREATE INDEX idx_activity_updated ON activity_log(updated_by);
+CREATE INDEX idx_activity_time ON activity_log(updated_at);
