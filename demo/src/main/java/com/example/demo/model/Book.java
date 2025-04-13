@@ -6,23 +6,19 @@ import lombok.*;
 import java.util.Set;
 
 @Entity
-@Table(name = "sheets")
+@Table(name = "books")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Sheet {
+public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne
-    @JoinColumn(name="book_id", nullable = false)
-    private Book book;
-
     @Column(nullable = false, unique = true)
     private String name;
 
-    @OneToMany(mappedBy = "sheet", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Cell> cells;
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Sheet> sheets;
 }
