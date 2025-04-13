@@ -16,10 +16,16 @@ public class ActivityLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "sheet_id") // this maps to the DB column
+    @Column(name = "book_id", nullable = false)
+    private Integer bookId;
+
+    @Column(name = "sheet_id")
     private Integer sheetId;
 
+    @Column(name = "row_num")
     private Integer rowNum; // Nullable since it's only used for cells
+
+    @Column(name = "col_num")
     private String colNum;  // Nullable since it's only used for cells
 
     @Lob // Ensures the column is TEXT in MySQL
@@ -28,10 +34,10 @@ public class ActivityLog {
     @Lob // Ensures the column is TEXT in MySQL
     private String formula;
 
-    @Column(nullable = false, length = 255)
+    @Column(name="updated_by", nullable = false, length = 255)
     private String updatedBy;
 
-    @Column(nullable = false)
+    @Column(name="updated_at", nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)
