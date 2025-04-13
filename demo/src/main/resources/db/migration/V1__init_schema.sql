@@ -1,9 +1,17 @@
 -- V1__init_schema.sql
-
-CREATE TABLE sheets (
+CREATE TABLE books (
 	`id` INT AUTO_INCREMENT PRIMARY KEY,
 	`name` VARCHAR(255) NOT NULL
 );
+
+CREATE TABLE sheets (
+	`id` INT AUTO_INCREMENT PRIMARY KEY,
+	`book_id` INT NOT NULL,
+	`name` VARCHAR(255) NOT NULL,
+	CONSTRAINT fk_BOOK FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_sheets_book ON sheets(book_id);
 
 CREATE TABLE cells (
 	`id` INT AUTO_INCREMENT PRIMARY KEY,
