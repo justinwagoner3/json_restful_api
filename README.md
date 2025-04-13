@@ -434,9 +434,9 @@ mysql> select * from activity_log;
 
 # Review and Retrospect
 
-## Indexes
+## Cells
 
-### Cells
+### Indexes
 
 Considered adding the following indexes, but was unsure how often grouping this specific would be used:
 
@@ -445,4 +445,8 @@ CREATE INDEX idx_cells_sheet_row ON cells(sheet_id, row_num);
 CREATE INDEX idx_cells_sheet_col ON cells(sheet_id, row_col);
 ```
 
-$$TODO will need to implement this - Over time we could use the access_log (activity_log) to determine if these are necessary.
+TODO will need to implement this - Over time we could use the access_log (activity_log) to determine if these are necessary.
+
+### Database
+
+Should have switched the order of rows and cols for better query readability.
