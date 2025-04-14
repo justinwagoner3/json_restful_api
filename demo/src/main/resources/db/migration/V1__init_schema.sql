@@ -1,13 +1,15 @@
 -- V1__init_schema.sql
 CREATE TABLE books (
 	`id` INT AUTO_INCREMENT PRIMARY KEY,
-	`name` VARCHAR(255) NOT NULL
+	`name` VARCHAR(255) NOT NULL,
+	CONSTRAINT uc_book_name UNIQUE (`name`)
 );
 
 CREATE TABLE sheets (
 	`id` INT AUTO_INCREMENT PRIMARY KEY,
 	`book_id` INT NOT NULL,
 	`name` VARCHAR(255) NOT NULL,
+	CONSTRAINT uc_sheet_book_name UNIQUE (book_id, name),
 	CONSTRAINT fk_BOOK FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
 );
 

@@ -104,7 +104,7 @@ public class CellController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Object> deleteCell(@RequestBody Map<String, Object> requestBody) {
+    public ResponseEntity<Object> deleteCellHumanReadable(@RequestBody Map<String, Object> requestBody) {
         try {
             Map<String, Object> sheetMap = (Map<String, Object>) requestBody.get("sheet");
             if (sheetMap == null) {
@@ -132,7 +132,7 @@ public class CellController {
                 throw new IllegalArgumentException("Row number and column number are required.");
             }
 
-            cellService.deleteCell(sheet, rowNum, colNum);
+            cellService.deleteCellByCoordinates(sheet, rowNum, colNum);
             return ResponseEntity.ok(Map.of("status", 200, "message", "Cell deleted successfully"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -142,4 +142,41 @@ public class CellController {
                     .body(Map.of("status", 404, "error", "Not Found", "message", e.getMessage(), "path", "/cells"));
         }
     }
+
+    @DeleteMapping("/{cellId}")
+    public ResponseEntity<Object> deleteCellById(@PathVariable Integer cellId) {
+        try {
+            cellService.deleteCellById(cellId);
+            return ResponseEntity.ok(Map.of("status", 200, "message", "Cell deleted successfully by ID"));
+        } catch (CellNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of(
+                        "status", 404,
+                        "error", "Not Found",
+                        "message", e.getMessage(),
+                        "path", "/cells/" + cellId
+                    ));
+        }
+    }
+
+    @DeleteMapping("/{sheetId}/{rowNum}/{colNum}")
+    public ResponseEntity<Object> deleteCellBySheetRowCol(@PathVariable int sheetId,
+                                                        @PathVariable int rowNum,
+                                                        @PathVariable String colNum) {
+        try {
+            Sheet sheet = sheetService.getSheetById(sheetId)
+                    .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + sheetId + " not found."));
+            cellService.deleteCellByCoordinates(sheet, rowNum, colNum);
+            return ResponseEntity.ok(Map.of("status", 200, "message", "Cell deleted successfully by sheet/row/col"));
+        } catch (SheetNotFoundException | CellNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of(
+                        "status", 404,
+                        "error", "Not Found",
+                        "message", e.getMessage(),
+                        "path", "/cells/" + sheetId + "/" + rowNum + "/" + colNum
+                    ));
+        }
+    }
+
 }

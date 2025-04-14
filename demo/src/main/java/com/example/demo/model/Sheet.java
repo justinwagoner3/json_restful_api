@@ -6,7 +6,10 @@ import lombok.*;
 import java.util.Set;
 
 @Entity
-@Table(name = "sheets")
+@Table(
+    name = "sheets",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"book_id", "name"})
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,7 +23,7 @@ public class Sheet {
     @JoinColumn(name="book_id", nullable = false)
     private Book book;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
 
     @OneToMany(mappedBy = "sheet", cascade = CascadeType.ALL, orphanRemoval = true)

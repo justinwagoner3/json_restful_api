@@ -148,13 +148,27 @@ public class CellService {
         return cellRepository.findBySheet(sheet);
     }
 
-    public void deleteCell(Sheet sheet, Integer rowNum, String colNum) {
+    public void deleteCellByCoordinates(Sheet sheet, Integer rowNum, String colNum) {
         Cell cell = cellRepository.findBySheetAndRowNumAndColNum(sheet, rowNum, colNum)
             .orElseThrow(() -> new CellNotFoundException("Cell not found for deletion."));
-        activityLogService.logActivity(sheet.getId(), rowNum, colNum, cell.getValue(), cell.getFormula(), "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.CELL);
-    	String cellKey = cellKey(cell);
+        deleteCell(cell,sheet);
+    }
+
+    public void deleteCellById(Integer cellId) {
+        Cell cell = cellRepository.findById(cellId)
+            .orElseThrow(() -> new CellNotFoundException("Cell with ID " + cellId + " not found."));
+        deleteCell(cell,null);
+    }
+
+    private void deleteCell(Cell cell, Sheet sheet) {
+        String cellKey = cellKey(cell);
+        activityLogService.logActivity(sheet.getId(), cell.getRowNum(), cell.getColNum(), cell.getValue(), cell.getFormula(), "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.CELL);
         cellRepository.delete(cell);
         recalculateDependents(cellKey, sheet);
     }
 
+    private void deleteCell(Cell cell) {
+        Sheet sheet = cell.getSheet();
+        deleteCell(cell,sheet);
+    }
 }
