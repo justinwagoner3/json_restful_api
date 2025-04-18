@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 public class SheetIntegrationTests {
 
     @Autowired
@@ -32,6 +33,8 @@ public class SheetIntegrationTests {
 
     @BeforeEach
     void setUp() {
+        sheetRepository.deleteAll();  // this first due to FK constraint
+        bookRepository.deleteAll();
         bookRepository.deleteAll();
         testBook = new Book();
         testBook.setName("IntegrationTestBook");
