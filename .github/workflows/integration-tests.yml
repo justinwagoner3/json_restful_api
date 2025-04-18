@@ -8,6 +8,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: demo  # 👈 tell GitHub to execute inside the 'demo' folder
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -23,4 +27,3 @@ jobs:
 
       - name: Build and run tests
         run: ./mvnw clean test
-
