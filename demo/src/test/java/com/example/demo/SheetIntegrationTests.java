@@ -4,20 +4,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.example.demo.model.Sheet;
 import com.example.demo.model.Book;
 import com.example.demo.repository.*;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SheetIntegrationTests {
 
     @Autowired
@@ -31,28 +34,24 @@ public class SheetIntegrationTests {
 
     private Book testBook;
 
-    @BeforeEach
-    void setUp() {
-        bookRepository.deleteAll();
+    @BeforeAll
+    void setUpOnce() {
         testBook = new Book();
-        testBook.setName("IntegrationTestBook");
+        testBook.setName("Test Book");
         testBook = bookRepository.save(testBook);
     }
 
     @Test
     void testCreateSheet() throws Exception {
-        
         Sheet sheet = new Sheet();
-        sheet.setName("My Integration Sheet");
-        sheet.setBook(testBook); // attach existing book
+        sheet.setName("Test Sheet 1");
+        sheet.setBook(testBook);
 
         mockMvc.perform(post("/sheets")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(sheet)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("My Integration Sheet"))
-                .andExpect(jsonPath("$.id").exists());
-
-        //assertTrue(true);
+                .andExpect(status().isCreated()) // Assuming controller returns 201
+                .andExpect(jsonPath("$.data.name").value("Test Sheet 1"))
+                .andExpect(jsonPath("$.data.id").exists());
     }
 }
