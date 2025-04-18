@@ -30,6 +30,9 @@ public class SheetIntegrationTests {
     @Autowired
     private BookRepository bookRepository;
 
+    @Autowired
+    private SheetRepository sheetRepository;
+
     private Book testBook;
 
     @BeforeEach
