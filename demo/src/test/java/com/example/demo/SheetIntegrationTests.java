@@ -43,7 +43,7 @@ public class SheetIntegrationTests {
     void testCreateSheet() throws Exception {
         
         Sheet sheet = new Sheet();
-        sheet.setName("My Integration Sheet2");
+        sheet.setName("My Integration Sheet");
         sheet.setBook(testBook); // attach existing book
 
         mockMvc.perform(post("/sheets")
