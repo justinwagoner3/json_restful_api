@@ -22,14 +22,15 @@ public class ActivityLogService {
         Sheet sheet = sheetRepository.findById(sheetId)
                 .orElseThrow(() -> new IllegalArgumentException("Sheet with ID " + sheetId + " not found, cannot log activity."));
 
-        logActivity(sheetId, null, null, sheet.getName(), null, updatedBy, operation, entityType);
+        logActivity(sheet.getBook().getId(), sheetId, null, null, sheet.getName(), null, updatedBy, operation, entityType);
     }
 
-    // Full method for Cell operations (or full Sheet details)
-    public void logActivity(Integer sheetId, Integer rowNum, String colNum, String value, String formula,
+    // Full method
+    public void logActivity(Integer bookId, Integer sheetId, Integer rowNum, String colNum, String value, String formula,
                             String updatedBy, ActivityLog.OperationType operation, ActivityLog.EntityType entityType) {
         ActivityLog log = new ActivityLog();
         log.setSheetId(sheetId);
+        log.setBookId(bookId);
         log.setRowNum(rowNum);
         log.setColNum(colNum);
         log.setValue(value);
