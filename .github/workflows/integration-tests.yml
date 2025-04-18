@@ -11,6 +11,27 @@ jobs:
     name: Run Integration Tests
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: demo_db
+          MYSQL_USER: appuser
+          MYSQL_PASSWORD: password123
+          MYSQL_ROOT_PASSWORD: rootpass
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/demo_db
+      SPRING_DATASOURCE_USERNAME: appuser
+      SPRING_DATASOURCE_PASSWORD: password123
+
     defaults:
       run:
         working-directory: demo
@@ -28,5 +49,14 @@ jobs:
       - name: Grant execute permission for Maven Wrapper
         run: chmod +x ./mvnw
 
-      - name: Build and run tests
-        run: ./mvnw -e -X clean test
+      - name: Wait for MySQL to be ready
+        run: |
+          echo "Waiting for MySQL to be available..."
+          for i in {1..30}; do
+            nc -z localhost 3306 && echo "MySQL is up!" && break
+            echo "Waiting ($i)..."
+            sleep 2
+          done
+
+      - name: Build and run integration tests
+        run: ./mvnw clean test -e -X
