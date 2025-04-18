@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class SheetIntegrationTest {
+public class SheetIntegrationTests {
 
     @Autowired
     private MockMvc mockMvc;
