@@ -59,4 +59,4 @@ jobs:
           done
 
       - name: Build and run integration tests
-        run: ./mvnw clean test -e -X
+        run: ./mvnw clean test
