@@ -1,6 +1,8 @@
 name: Run Integration Tests
 
 on:
+  push:
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -10,7 +12,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: demo  # 👈 tell GitHub to execute inside the 'demo' folder
+        working-directory: demo
 
     steps:
       - name: Checkout code
