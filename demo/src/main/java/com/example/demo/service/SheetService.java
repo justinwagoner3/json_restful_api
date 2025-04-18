@@ -3,8 +3,10 @@ package com.example.demo.service;
 import com.example.demo.exception.SheetNotFoundException;
 import com.example.demo.model.ActivityLog;
 import com.example.demo.model.Sheet;
+import com.example.demo.model.Book;
 import com.example.demo.repository.ActivityLogRepository;
 import com.example.demo.repository.SheetRepository;
+import com.example.demo.repository.BookRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.server.ResponseStatusException;
@@ -17,10 +19,12 @@ import java.util.Optional;
 public class SheetService {
     private final SheetRepository sheetRepository;
     private final ActivityLogService activityLogService;
+    private final BookRepository bookRepository;
 
-    public SheetService(SheetRepository sheetRepository, ActivityLogService activityLogService) {
+    public SheetService(SheetRepository sheetRepository, ActivityLogService activityLogService, BookRepository bookRepository) {
         this.sheetRepository = sheetRepository;
         this.activityLogService = activityLogService;
+        this.bookRepository = bookRepository;
     }
 
     public List<Sheet> getAllSheets() {
@@ -35,21 +39,44 @@ public class SheetService {
         return sheetRepository.findByName(name);
     }
 
-    public Sheet createSheet(Sheet sheet) {
-        if (sheet.getName() == null || sheet.getName().trim().isEmpty()) {
+    public Sheet createSheet(String sheetName, Book inputBook) {
+        if (sheetName == null || sheetName.trim().isEmpty()) {
             throw new IllegalArgumentException("Sheet name is required and cannot be empty.");
         }
 
+        if (inputBook == null) {
+            throw new IllegalArgumentException("Sheet must be associated with a book.");
+        }
+
+        Book book = null;
+
+        if (inputBook.getId() != null) {
+            book = bookRepository.findById(inputBook.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book with ID " + inputBook.getId() + " not found."));
+        } else if (inputBook.getName() != null) {
+            book = bookRepository.findByName(inputBook.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book with name \"" + inputBook.getName() + "\" not found."));
+        } else {
+            throw new IllegalArgumentException("Book must contain either an ID or name.");
+        }
+
+        Sheet sheet = new Sheet();
+        sheet.setName(sheetName);
+        sheet.setBook(book);
+
         try {
             Sheet createdSheet = sheetRepository.save(sheet);
-
-            // Log the creation with entityType = SHEET
             activityLogService.logActivity(createdSheet.getId(), "system", ActivityLog.OperationType.ADD, ActivityLog.EntityType.SHEET);
-
             return createdSheet;
         } catch (DataIntegrityViolationException e) {
+            e.printStackTrace(); 
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Sheet name already exists.");
+        } catch (Exception e) {
+            System.err.println("Generic failure: " + e.getClass().getName() + ": " + e.getMessage());
+            e.printStackTrace();
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error during sheet creation.");
         }
+
     }
 
     public Sheet updateSheet(int id, Sheet newSheet) {

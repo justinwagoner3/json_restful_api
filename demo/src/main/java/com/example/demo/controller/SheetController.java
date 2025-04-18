@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.SheetDTO;
 import com.example.demo.exception.SheetNotFoundException;
 import com.example.demo.model.Sheet;
+import com.example.demo.model.Book;
 import com.example.demo.service.SheetService;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
@@ -49,30 +50,26 @@ public class SheetController {
         }
     }
 
+    public static class CreateSheetRequest {
+        public String name;
+        public Book book;
+    }
+
     @PostMapping
-    public ResponseEntity<Object> createSheet(@RequestBody Sheet sheet) {
+    public ResponseEntity<Object> createSheet(@RequestBody CreateSheetRequest request) {
         try {
-            Sheet createdSheet = sheetService.createSheet(sheet);
+            Sheet createdSheet = sheetService.createSheet(request.name, request.book);
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(Map.of("status", 201, "data", new SheetDTO(createdSheet)));
+                .body(Map.of("status", 201, "data", new SheetDTO(createdSheet)));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of(
-                            "status", 400,
-                            "error", "Bad Request",
-                            "message", e.getMessage(),
-                            "path", "/sheets"
-                    ));
+                .body(Map.of("status", 400, "error", "Bad Request", "message", e.getMessage(), "path", "/sheets"));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
-                    .body(Map.of(
-                            "status", e.getStatusCode().value(),
-                            "error", "Conflict",
-                            "message", e.getReason(),
-                            "path", "/sheets"
-                    ));
+                .body(Map.of("status", e.getStatusCode().value(), "error", "Conflict", "message", e.getReason(), "path", "/sheets"));
         }
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<Object> updateSheet(@PathVariable int id, @RequestBody Sheet updatedSheet) {

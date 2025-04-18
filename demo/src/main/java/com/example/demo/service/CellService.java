@@ -4,6 +4,7 @@ import com.example.demo.exception.CellNotFoundException;
 import com.example.demo.exception.SheetNotFoundException;
 import com.example.demo.model.Cell;
 import com.example.demo.model.Sheet;
+import com.example.demo.model.Book;
 import com.example.demo.model.ActivityLog;
 import com.example.demo.repository.CellRepository;
 import com.example.demo.repository.SheetRepository;
@@ -49,11 +50,11 @@ public class CellService {
             toUpdate.setValue(cell.getValue());
             toUpdate.setFormula(cell.getFormula());
             result = cellRepository.save(toUpdate);
-            activityLogService.logActivity(cell.getSheet().getId(), cell.getRowNum(), cell.getColNum(), cell.getValue(), cell.getFormula(), "system", ActivityLog.OperationType.UPDATE, ActivityLog.EntityType.CELL);
+            activityLogService.logActivity(cell.getSheet().getBook().getId(), cell.getSheet().getId(), cell.getRowNum(), cell.getColNum(), cell.getValue(), cell.getFormula(), "system", ActivityLog.OperationType.UPDATE, ActivityLog.EntityType.CELL);
 
         } else {
             result = cellRepository.save(cell);
-            activityLogService.logActivity(cell.getSheet().getId(), cell.getRowNum(), cell.getColNum(), cell.getValue(), cell.getFormula(), "system", ActivityLog.OperationType.ADD, ActivityLog.EntityType.CELL);
+            activityLogService.logActivity(cell.getSheet().getBook().getId(), cell.getSheet().getId(), cell.getRowNum(), cell.getColNum(), cell.getValue(), cell.getFormula(), "system", ActivityLog.OperationType.ADD, ActivityLog.EntityType.CELL);
         }
 
         recalculateDependents(cellKey, cell.getSheet());
@@ -162,7 +163,7 @@ public class CellService {
 
     private void deleteCell(Cell cell, Sheet sheet) {
         String cellKey = cellKey(cell);
-        activityLogService.logActivity(sheet.getId(), cell.getRowNum(), cell.getColNum(), cell.getValue(), cell.getFormula(), "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.CELL);
+        activityLogService.logActivity(sheet.getBook().getId(), sheet.getId(), cell.getRowNum(), cell.getColNum(), cell.getValue(), cell.getFormula(), "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.CELL);
         cellRepository.delete(cell);
         recalculateDependents(cellKey, sheet);
     }
