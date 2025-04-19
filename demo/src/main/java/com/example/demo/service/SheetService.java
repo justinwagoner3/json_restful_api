@@ -4,7 +4,6 @@ import com.example.demo.exception.SheetNotFoundException;
 import com.example.demo.model.ActivityLog;
 import com.example.demo.model.Sheet;
 import com.example.demo.model.Book;
-import com.example.demo.repository.ActivityLogRepository;
 import com.example.demo.repository.SheetRepository;
 import com.example.demo.repository.BookRepository;
 import org.springframework.stereotype.Service;
@@ -66,7 +65,7 @@ public class SheetService {
 
         try {
             Sheet createdSheet = sheetRepository.save(sheet);
-            activityLogService.logActivity(createdSheet.getId(), "system", ActivityLog.OperationType.ADD, ActivityLog.EntityType.SHEET);
+            activityLogService.logActivitySheet(createdSheet.getId(), "system", ActivityLog.OperationType.ADD, ActivityLog.EntityType.SHEET);
             return createdSheet;
         } catch (DataIntegrityViolationException e) {
             e.printStackTrace(); 
@@ -88,7 +87,7 @@ public class SheetService {
             Sheet updatedSheet = sheetRepository.save(sheet);
 
             // Log the update with entityType = SHEET
-            activityLogService.logActivity(updatedSheet.getId(), "system", ActivityLog.OperationType.UPDATE, ActivityLog.EntityType.SHEET);
+            activityLogService.logActivitySheet(updatedSheet.getId(), "system", ActivityLog.OperationType.UPDATE, ActivityLog.EntityType.SHEET);
 
             return updatedSheet;
         }).orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + id + " not found, cannot UPDATE."));
@@ -99,7 +98,7 @@ public class SheetService {
             .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + id + " not found, cannot DELETE."));
 
         // Log the deletion with entityType = SHEET
-        activityLogService.logActivity(sheet.getId(), "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.SHEET);
+        activityLogService.logActivitySheet(sheet.getId(), "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.SHEET);
 
         sheetRepository.deleteById(id);
     }

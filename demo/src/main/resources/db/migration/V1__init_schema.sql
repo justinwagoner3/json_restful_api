@@ -30,7 +30,7 @@ CREATE INDEX idx_cells_sheet_row_col ON cells(sheet_id, row_num, col_num);
 
 CREATE TABLE activity_log (
 	`id` INT AUTO_INCREMENT PRIMARY KEY,
-	`entity_type` VARCHAR(10) NOT NULL CHECK (entity_type IN ('SHEET', 'CELL')),
+	`entity_type` VARCHAR(10) NOT NULL CHECK (entity_type IN ('BOOK', 'SHEET', 'CELL')),
 	`operation` VARCHAR(10) NOT NULL CHECK (operation IN ('ADD', 'UPDATE', 'DELETE')),
 	`book_id` INT NOT NULL,
 	`sheet_id` INT,

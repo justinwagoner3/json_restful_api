@@ -53,6 +53,6 @@ public class ActivityLog {
     }
 
     public enum EntityType {
-        SHEET, CELL
+        BOOK, SHEET, CELL
     }
 }
