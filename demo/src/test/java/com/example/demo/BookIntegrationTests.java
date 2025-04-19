@@ -117,7 +117,7 @@ public class BookIntegrationTests {
     void testDeleteNonexistentBook() throws Exception {
         mockMvc.perform(delete("/books/9999"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Not Found"));
+                .andExpect(jsonPath("$.error").value("Book with ID 9999 not found."));
     }
 
     @Test
