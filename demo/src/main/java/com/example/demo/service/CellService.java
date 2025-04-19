@@ -1,16 +1,11 @@
 package com.example.demo.service;
 
 import com.example.demo.exception.CellNotFoundException;
-import com.example.demo.exception.SheetNotFoundException;
 import com.example.demo.model.Cell;
 import com.example.demo.model.Sheet;
-import com.example.demo.model.Book;
 import com.example.demo.model.ActivityLog;
 import com.example.demo.repository.CellRepository;
-import com.example.demo.repository.SheetRepository;
-import com.example.demo.repository.ActivityLogRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,15 +16,13 @@ import java.util.regex.*;
 @Service
 public class CellService {
     private final CellRepository cellRepository;
-    private final SheetService sheetService;
     private final ActivityLogService activityLogService;
 
     // key: A1, value: set of dependent cells (like A3, A5)
     private final Map<String, Set<String>> dependencyGraph = new HashMap<>();
 
-    public CellService(CellRepository cellRepository, SheetService sheetService, ActivityLogService activityLogService) {
+    public CellService(CellRepository cellRepository, ActivityLogService activityLogService) {
         this.cellRepository = cellRepository;
-        this.sheetService = sheetService;
         this.activityLogService = activityLogService;
     }
 
@@ -166,10 +159,5 @@ public class CellService {
         activityLogService.logActivity(sheet.getBook().getId(), sheet.getId(), cell.getRowNum(), cell.getColNum(), cell.getValue(), cell.getFormula(), "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.CELL);
         cellRepository.delete(cell);
         recalculateDependents(cellKey, sheet);
-    }
-
-    private void deleteCell(Cell cell) {
-        Sheet sheet = cell.getSheet();
-        deleteCell(cell,sheet);
     }
 }
