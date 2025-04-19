@@ -3,7 +3,6 @@ package com.example.demo.controller;
 import com.example.demo.dto.SheetDTO;
 import com.example.demo.exception.SheetNotFoundException;
 import com.example.demo.model.Sheet;
-import com.example.demo.model.Book;
 import com.example.demo.service.SheetService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -49,15 +48,10 @@ public class SheetController {
         }
     }
 
-    public static class CreateSheetRequest {
-        public String name;
-        public Book book;
-    }
-
     @PostMapping
-    public ResponseEntity<Object> createSheet(@RequestBody CreateSheetRequest request) {
+    public ResponseEntity<Object> createSheet(@RequestBody Sheet sheet) {
         try {
-            Sheet createdSheet = sheetService.createSheet(request.name, request.book);
+            Sheet createdSheet = sheetService.createSheet(sheet.getName(), sheet.getBook());
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of("status", 201, "data", new SheetDTO(createdSheet)));
         } catch (IllegalArgumentException e) {
@@ -68,10 +62,8 @@ public class SheetController {
                 .body(Map.of("status", e.getStatusCode().value(), "error", "Conflict", "message", e.getReason(), "path", "/sheets"));
         }
     }
-
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Object> updateSheet(@PathVariable int id, @RequestBody Sheet updatedSheet) {
+    
+    private ResponseEntity<Object> updateSheet(int id, Sheet updatedSheet, String path) {
         try {
             Sheet sheet = sheetService.updateSheet(id, updatedSheet);
             return ResponseEntity.ok(Map.of("status", 200, "data", new SheetDTO(sheet)));
@@ -81,7 +73,7 @@ public class SheetController {
                             "status", 400,
                             "error", "Bad Request",
                             "message", e.getMessage(),
-                            "path", "/sheets/" + id
+                            "path", path
                     ));
         } catch (SheetNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -89,7 +81,7 @@ public class SheetController {
                             "status", 404,
                             "error", "Not Found",
                             "message", e.getMessage(),
-                            "path", "/sheets/" + id
+                            "path", path
                     ));
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode())
@@ -97,11 +89,30 @@ public class SheetController {
                             "status", e.getStatusCode().value(),
                             "error", "Conflict",
                             "message", e.getReason(),
-                            "path", "/sheets/" + id
+                            "path", path
                     ));
         }
     }
-
+    
+    @PutMapping("/{id}")
+    public ResponseEntity<Object> updateSheetByPath(@PathVariable int id, @RequestBody Sheet updatedSheet) {
+        return updateSheet(id, updatedSheet, "/sheets/" + id);
+    }
+    
+    @PutMapping
+    public ResponseEntity<Object> updateSheetByBody(@RequestBody Sheet updatedSheet) {
+        if (updatedSheet.getId() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(
+                            "status", 400,
+                            "error", "Bad Request",
+                            "message", "Sheet ID must be provided in the body.",
+                            "path", "/sheets"
+                    ));
+        }
+        return updateSheet(updatedSheet.getId(), updatedSheet, "/sheets");
+    }
+            
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteSheet(@PathVariable int id) {
         try {
@@ -117,4 +128,31 @@ public class SheetController {
                     ));
         }
     }
+
+    @DeleteMapping
+    public ResponseEntity<Object> deleteSheetByBody(@RequestBody Sheet sheet) {
+        if (sheet.getName() == null || sheet.getBook() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(
+                            "status", 400,
+                            "error", "Bad Request",
+                            "message", "Sheet name and book are required.",
+                            "path", "/sheets"
+                    ));
+        }
+    
+        try {
+            sheetService.deleteSheetByNameAndBook(sheet.getName(), sheet.getBook());
+            return ResponseEntity.ok(Map.of("status", 200, "message", "Sheet deleted successfully"));
+        } catch (SheetNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of(
+                            "status", 404,
+                            "error", "Not Found",
+                            "message", e.getMessage(),
+                            "path", "/sheets"
+                    ));
+        }
+    }
+        
 }
