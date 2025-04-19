@@ -141,5 +141,25 @@ public class SheetService {
         activityLogService.logActivitySheet(sheet.getId(), "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.SHEET);
         sheetRepository.delete(sheet);
     }
-        
+
+    public Optional<Sheet> getSheetByBookIdAndName(Integer bookId, String sheetName) {
+        if (bookId == null || sheetName == null || sheetName.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        return sheetRepository.findByBookIdAndName(bookId, sheetName);
+    }
+    
+    public Optional<Sheet> getSheetByBookNameAndSheetName(String bookName, String sheetName) {
+        if (bookName == null || sheetName == null || sheetName.trim().isEmpty()) {
+            return Optional.empty();
+        }
+    
+        Optional<Book> bookOpt = bookRepository.findByName(bookName);
+        if (bookOpt.isEmpty()) {
+            return Optional.empty();
+        }
+    
+        return sheetRepository.findByBookIdAndName(bookOpt.get().getId(), sheetName);
+    }
+    
 }
