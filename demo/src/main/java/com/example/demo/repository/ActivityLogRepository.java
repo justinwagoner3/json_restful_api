@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface ActivityLogRepository extends JpaRepository<ActivityLog, Integer> {
 
+    List<ActivityLog> findByEntityType(ActivityLog.EntityType entityType);
+
     List<ActivityLog> findByEntityTypeAndOperation(EntityType entityType, OperationType operation);
 
     List<ActivityLog> findByEntityTypeAndOperationAndBookId(EntityType entityType, OperationType operation, Integer bookId);

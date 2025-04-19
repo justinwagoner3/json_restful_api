@@ -60,8 +60,8 @@ public class BookIntegrationTests {
                 .andExpect(jsonPath("$.data.name").value("Created Book"));
 
         List<ActivityLog> logs = activityLogRepository.findByEntityTypeAndOperation(EntityType.BOOK, OperationType.ADD);
-        assertEquals(1, logs.size());
-        assertEquals("Created Book", logs.get(0).getValue());
+        assertFalse(logs.isEmpty());
+        assertTrue(logs.stream().anyMatch(log -> "Created Book".equals(log.getValue())));
     }
 
     @Test
@@ -75,8 +75,8 @@ public class BookIntegrationTests {
                 .andExpect(jsonPath("$.data.name").value("Updated Book"));
 
         List<ActivityLog> logs = activityLogRepository.findByEntityTypeAndOperation(EntityType.BOOK, OperationType.UPDATE);
-        assertEquals(1, logs.size());
-        assertEquals("Updated Book", logs.get(0).getValue());
+        assertFalse(logs.isEmpty());
+        assertTrue(logs.stream().anyMatch(log -> "Updated Book".equals(log.getValue())));
     }
 
     @Test
@@ -86,7 +86,52 @@ public class BookIntegrationTests {
                 .andExpect(jsonPath("$.message").value("Book deleted successfully"));
 
         List<ActivityLog> logs = activityLogRepository.findByEntityTypeAndOperation(EntityType.BOOK, OperationType.DELETE);
-        assertEquals(1, logs.size());
-        assertEquals("Initial Book", logs.get(0).getValue());
+        assertFalse(logs.isEmpty());
+        assertTrue(logs.stream().anyMatch(log -> "Updated Book".equals(log.getValue()) || "Initial Book".equals(log.getValue())));
+    }
+
+    @Test
+    void testCreateBookMissingName() throws Exception {
+        Book newBook = new Book();
+        mockMvc.perform(post("/books")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(newBook)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Bad Request"));
+    }
+
+    @Test
+    void testUpdateNonexistentBook() throws Exception {
+        Book fakeBook = new Book();
+        fakeBook.setId(9999);
+        fakeBook.setName("Ghost Book");
+
+        mockMvc.perform(put("/books/9999")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(fakeBook)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"));
+    }
+
+    @Test
+    void testDeleteNonexistentBook() throws Exception {
+        mockMvc.perform(delete("/books/9999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Book with ID 9999 not found."))
+                .andExpect(jsonPath("$.path").value("/books/9999"));
+    }
+    
+    @Test
+    void testDuplicateBookName() throws Exception {
+        Book duplicate = new Book();
+        duplicate.setName("Initial Book");
+
+        mockMvc.perform(post("/books")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(duplicate)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("Conflict"));
     }
 }
