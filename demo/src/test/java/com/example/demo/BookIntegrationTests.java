@@ -117,9 +117,12 @@ public class BookIntegrationTests {
     void testDeleteNonexistentBook() throws Exception {
         mockMvc.perform(delete("/books/9999"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Book with ID 9999 not found."));
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Book with ID 9999 not found."))
+                .andExpect(jsonPath("$.path").value("/books/9999"));
     }
-
+    
     @Test
     void testDuplicateBookName() throws Exception {
         Book duplicate = new Book();

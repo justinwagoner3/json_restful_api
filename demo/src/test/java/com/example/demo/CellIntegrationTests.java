@@ -3,9 +3,13 @@ package com.example.demo;
 import com.example.demo.model.Book;
 import com.example.demo.model.Sheet;
 import com.example.demo.model.Cell;
+import com.example.demo.model.ActivityLog;
+import com.example.demo.model.ActivityLog.EntityType;
+import com.example.demo.model.ActivityLog.OperationType;
 import com.example.demo.repository.BookRepository;
 import com.example.demo.repository.SheetRepository;
 import com.example.demo.repository.CellRepository;
+import com.example.demo.repository.ActivityLogRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +23,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.Map;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -31,6 +38,7 @@ public class CellIntegrationTests {
     @Autowired private BookRepository bookRepository;
     @Autowired private SheetRepository sheetRepository;
     @Autowired private CellRepository cellRepository;
+    @Autowired private ActivityLogRepository activityLogRepository;
 
     private Book book;
     private Sheet sheet;
@@ -61,6 +69,10 @@ public class CellIntegrationTests {
                 .content(objectMapper.writeValueAsString(requestBody)))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.data.value").value("123"));
+
+        List<ActivityLog> logs = activityLogRepository.findByEntityTypeAndOperation(EntityType.CELL, OperationType.ADD);
+        assertEquals(1, logs.size());
+        assertEquals("123", logs.get(0).getValue());
     }
 
     @Test
@@ -80,6 +92,10 @@ public class CellIntegrationTests {
                 .content(objectMapper.writeValueAsString(requestBody)))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.data.value").value("updated"));
+
+        List<ActivityLog> logs = activityLogRepository.findByEntityTypeAndOperation(EntityType.CELL, OperationType.UPDATE);
+        assertEquals(1, logs.size());
+        assertEquals("updated", logs.get(0).getValue());
     }
 
     @Test
@@ -98,6 +114,10 @@ public class CellIntegrationTests {
                 .content(objectMapper.writeValueAsString(requestBody)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.message").value("Cell deleted successfully"));
+
+        List<ActivityLog> logs = activityLogRepository.findByEntityTypeAndOperation(EntityType.CELL, OperationType.DELETE);
+        assertEquals(1, logs.size());
+        assertEquals("toDelete", logs.get(0).getValue());
     }
 
     @Test
@@ -108,6 +128,10 @@ public class CellIntegrationTests {
         mockMvc.perform(delete("/cells/" + cell.getId()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.message").value("Cell deleted successfully by ID"));
+
+        List<ActivityLog> logs = activityLogRepository.findByEntityTypeAndOperation(EntityType.CELL, OperationType.DELETE);
+        assertEquals(1, logs.size());
+        assertEquals("byId", logs.get(0).getValue());
     }
 
     @Test
@@ -123,6 +147,9 @@ public class CellIntegrationTests {
                 .content(objectMapper.writeValueAsString(requestBody)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.message").value("Sheet object is required."));
+
+        List<ActivityLog> logs = activityLogRepository.findByEntityType(EntityType.CELL);
+        assertEquals(0, logs.size());
     }
 
     @Test
@@ -130,5 +157,8 @@ public class CellIntegrationTests {
         mockMvc.perform(get("/cells/" + sheet.getId() + "/99/Z"))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.message").value("Cell not found for Sheet ID " + sheet.getId() + ", Row 99, Column Z"));
+
+        List<ActivityLog> logs = activityLogRepository.findByEntityType(EntityType.CELL);
+        assertEquals(0, logs.size());
     }
 }
