@@ -449,4 +449,8 @@ TODO will need to implement this - Over time we could use the access_log (activi
 
 ### Database
 
-Should have switched the order of rows and cols for better query readability.# Triggering CI
+Should have switched the order of rows and cols for better query readability.
+
+## TO SORT
+
+generic `id` fields in db is confusing... should've done book_id, sheet_id, cell_id as PKs to make joins easier

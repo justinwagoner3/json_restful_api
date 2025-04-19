@@ -7,9 +7,6 @@ import com.example.demo.model.ActivityLog;
 import com.example.demo.repository.CellRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-
 import java.util.*;
 import java.util.regex.*;
 
@@ -148,6 +145,7 @@ public class CellService {
         deleteCell(cell,sheet);
     }
 
+    // might be a better way to handle this
     public void deleteCellById(Integer cellId) {
         Cell cell = cellRepository.findById(cellId)
             .orElseThrow(() -> new CellNotFoundException("Cell with ID " + cellId + " not found."));
@@ -155,6 +153,9 @@ public class CellService {
     }
 
     private void deleteCell(Cell cell, Sheet sheet) {
+        if (sheet == null) {
+            sheet = cell.getSheet();
+        }
         String cellKey = cellKey(cell);
         activityLogService.logActivity(sheet.getBook().getId(), sheet.getId(), cell.getRowNum(), cell.getColNum(), cell.getValue(), cell.getFormula(), "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.CELL);
         cellRepository.delete(cell);
