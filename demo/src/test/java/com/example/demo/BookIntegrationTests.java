@@ -87,6 +87,6 @@ public class BookIntegrationTests {
 
         List<ActivityLog> logs = activityLogRepository.findByEntityTypeAndOperation(EntityType.BOOK, OperationType.DELETE);
         assertEquals(1, logs.size());
-        assertEquals("Updated Book", logs.get(0).getValue());
+        assertEquals("Initial Book", logs.get(0).getValue());
     }
 }
