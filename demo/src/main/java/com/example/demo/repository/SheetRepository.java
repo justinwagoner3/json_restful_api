@@ -6,4 +6,5 @@ import java.util.Optional;
 
 public interface SheetRepository extends JpaRepository<Sheet, Integer> {
     Optional<Sheet> findByName(String name);
+    Optional<Sheet> findByBookIdAndName(Integer bookId, String name);
 }
