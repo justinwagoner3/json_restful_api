@@ -66,7 +66,7 @@ public class BookService {
 
     public void deleteBook(int id) {
         if (!bookRepository.existsById(id)) {
-            throw new SheetNotFoundException("Book with ID " + id + " not found.");
+            throw new BookNotFoundException("Book with ID " + id + " not found.");
         }
         activityLogService.logActivityBook(id, "system", ActivityLog.OperationType.DELETE, ActivityLog.EntityType.BOOK);
         bookRepository.deleteById(id);
