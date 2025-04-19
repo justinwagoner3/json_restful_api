@@ -2,8 +2,12 @@ package com.example.demo;
 
 import com.example.demo.model.Book;
 import com.example.demo.model.Sheet;
+import com.example.demo.model.ActivityLog;
+import com.example.demo.model.ActivityLog.EntityType;
+import com.example.demo.model.ActivityLog.OperationType;
 import com.example.demo.repository.BookRepository;
 import com.example.demo.repository.SheetRepository;
+import com.example.demo.repository.ActivityLogRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +17,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -27,6 +34,7 @@ public class SheetIntegrationTests {
     @Autowired private ObjectMapper objectMapper;
     @Autowired private BookRepository bookRepository;
     @Autowired private SheetRepository sheetRepository;
+    @Autowired private ActivityLogRepository activityLogRepository;
 
     private Book testBook;
 
@@ -48,6 +56,9 @@ public class SheetIntegrationTests {
                 .content(objectMapper.writeValueAsString(sheet)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.name").value("Sheet A"));
+
+        List<ActivityLog> logs = activityLogRepository.findByEntityTypeAndOperation(EntityType.SHEET, OperationType.ADD);
+        assertFalse(logs.isEmpty());
     }
 
     @Test
@@ -60,6 +71,9 @@ public class SheetIntegrationTests {
                 .content(objectMapper.writeValueAsString(sheet)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", containsString("Sheet name is required")));
+
+        List<ActivityLog> logs = activityLogRepository.findByEntityType(EntityType.SHEET);
+        assertTrue(logs.stream().noneMatch(log -> log.getOperation() == OperationType.ADD));
     }
 
     @Test
@@ -87,6 +101,9 @@ public class SheetIntegrationTests {
                 .content(objectMapper.writeValueAsString(sheet)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.name").value("Updated Sheet"));
+
+        List<ActivityLog> logs = activityLogRepository.findByEntityTypeAndOperation(EntityType.SHEET, OperationType.UPDATE);
+        assertFalse(logs.isEmpty());
     }
 
     @Test
@@ -100,6 +117,9 @@ public class SheetIntegrationTests {
                 .content(objectMapper.writeValueAsString(sheet)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", containsString("Sheet ID must be provided")));
+
+        List<ActivityLog> logs = activityLogRepository.findByEntityType(EntityType.SHEET);
+        assertTrue(logs.stream().noneMatch(log -> log.getOperation() == OperationType.UPDATE));
     }
 
     @Test
@@ -112,6 +132,9 @@ public class SheetIntegrationTests {
         mockMvc.perform(delete("/sheets/" + sheet.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Sheet deleted successfully"));
+
+        List<ActivityLog> logs = activityLogRepository.findByEntityTypeAndOperation(EntityType.SHEET, OperationType.DELETE);
+        assertFalse(logs.isEmpty());
     }
 
     @Test
@@ -126,6 +149,9 @@ public class SheetIntegrationTests {
                 .content(objectMapper.writeValueAsString(sheet)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Sheet deleted successfully"));
+
+        List<ActivityLog> logs = activityLogRepository.findByEntityTypeAndOperation(EntityType.SHEET, OperationType.DELETE);
+        assertFalse(logs.isEmpty());
     }
 
     @Test
@@ -138,6 +164,9 @@ public class SheetIntegrationTests {
                 .content(objectMapper.writeValueAsString(sheet)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", containsString("Sheet name and book are required")));
+
+        List<ActivityLog> logs = activityLogRepository.findByEntityType(EntityType.SHEET);
+        assertTrue(logs.stream().noneMatch(log -> log.getOperation() == OperationType.DELETE));
     }
 
     @Test
@@ -152,5 +181,8 @@ public class SheetIntegrationTests {
         mockMvc.perform(delete("/sheets/9999"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message", containsString("not found")));
+
+        List<ActivityLog> logs = activityLogRepository.findByEntityType(EntityType.SHEET);
+        assertTrue(logs.stream().noneMatch(log -> log.getOperation() == OperationType.DELETE));
     }
 }
