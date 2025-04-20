@@ -90,7 +90,7 @@ public class CellIntegrationTests {
         mockMvc.perform(put("/cells")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestBody)))
-            .andExpect(status().isCreated())
+            .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.value").value("updated"));
 
         List<ActivityLog> logs = activityLogRepository.findByEntityTypeAndOperation(EntityType.CELL, OperationType.UPDATE);
@@ -161,4 +161,24 @@ public class CellIntegrationTests {
         List<ActivityLog> logs = activityLogRepository.findByEntityType(EntityType.CELL);
         assertEquals(0, logs.size());
     }
+
+    void testPutCreatesNewCellIfNotExists() throws Exception {
+        Map<String, Object> requestBody = Map.of(
+            "sheet", Map.of("id", sheet.getId()),
+            "rowNum", 10,
+            "colNum", "X",
+            "value", "newViaPut"
+        );
+    
+        mockMvc.perform(put("/cells")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestBody)))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.data.value").value("newViaPut"));
+    
+        List<ActivityLog> logs = activityLogRepository.findByEntityTypeAndOperation(EntityType.CELL, OperationType.ADD);
+        assertEquals(1, logs.size());
+        assertEquals("newViaPut", logs.get(0).getValue());
+    }
+    
 }

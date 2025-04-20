@@ -268,6 +268,10 @@ You can reference the sheet using either the id, or name + book:
 - **`PUT /cells`** – Update a Cell  
 (same body as `POST /cells`)
 
+  * Processes as upsert (only true for cells)
+    * 200 for updated
+    * 201 for created
+
 ### Delete
 - **`DELETE /cells`** – Delete a Cell by sheet + row + column  
 Supports sheet by ID or name + book
@@ -362,10 +366,11 @@ curl -X PUT "http://localhost:8080/sheets/1" \
 #### Expected Response (200 OK)
 ```json
 {
-  "status": 200,
-  "data": {
-    "id": 1,
-    "name": "sheet1-updated"
+  "status" : 200,
+  "data" : {
+    "id" : 1,
+    "name" : "sheet1-updated",
+    "bookId" : 1
   }
 }
 ```
@@ -377,10 +382,11 @@ curl -X GET "http://localhost:8080/sheets/1"
 #### Expected Response (200 OK)
 ```json
 {
-  "status": 200,
-  "data": {
-    "id": 1,
-    "name": "sheet1-updated"
+  "status" : 200,
+  "data" : {
+    "id" : 1,
+    "name" : "sheet1-updated",
+    "bookId" : 1
   }
 }
 ```
@@ -404,13 +410,12 @@ curl -X GET "http://localhost:8080/sheets"
 #### Expected Response (200 OK)
 ```json
 {
-  "status": 200,
-  "data": [
-    {
-      "id": 1,
-      "name": "sheet1-updated"
-    }
-  ]
+  "status" : 200,
+  "data" : [ {
+    "id" : 1,
+    "name" : "sheet1-updated",
+    "bookId" : 1
+  } ]
 }
 ```
 
@@ -428,6 +433,22 @@ curl -X POST "http://localhost:8080/cells" \
          }'
 ```
 
+#### Expected Response (201 Created)
+```json
+{
+  "status" : 201,
+  "data" : {
+    "id" : 1,
+    "sheetId" : 1,
+    "rowNum" : 1,
+    "colNum" : "A",
+    "value" : "8",
+    "formula" : null
+  }
+}
+```
+
+
 ### Create Cell A2 using Sheet ID
 ```sh
 curl -X POST "http://localhost:8080/cells" \
@@ -438,6 +459,21 @@ curl -X POST "http://localhost:8080/cells" \
            "colNum": "A",
            "value": "18"
          }'
+```
+
+#### Expected Response (201 Created)
+```json
+{
+  "status" : 201,
+  "data" : {
+    "id" : 2,
+    "sheetId" : 1,
+    "rowNum" : 2,
+    "colNum" : "A",
+    "value" : "18",
+    "formula" : null
+  }
+}
 ```
 
 ### Create Cell A3 with Formula `=A1+A2`
@@ -476,6 +512,10 @@ curl -X PUT "http://localhost:8080/cells" \
            "colNum": "A",
            "value": "5"
          }'
+```
+
+#### Expected Response (200 Updated)
+```json
 ```
 
 ### Get A3 (should now equal 13.0)
