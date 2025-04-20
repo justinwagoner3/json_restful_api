@@ -632,11 +632,16 @@ mysql> select * from activity_log;
 
 # Review and Retrospect
 
+## Generic
+
+1. Should have made this section at the start of the project and documented it as I went instead of drawing from memory at the end.
+
 ## Database
 
 1. Should have switched the order of rows and cols for better query readability.
-2. generic `id` fields in db is confusing... should've done book_id, sheet_id, cell_id as PKs to make joins easier
-3. Cells indexes:
+2. Generic `id` fields in db is confusing... should've done book_id, sheet_id, cell_id as PKs to make joins easier.
+3. If we ended up not needing the group things by row / column frequently, might've been simpler to just have a `coordinate` field instead of row/col that would have value `A1` as example instead of splitting into two different fields.
+4. Cells indexes:
 
 Considered adding the following indexes, but was unsure how often grouping this specific would be used:
 
@@ -647,6 +652,31 @@ CREATE INDEX idx_cells_sheet_col ON cells(sheet_id, row_col);
 
 Over time we could use the access_log (activity_log) to determine if these are necessary.
 
+## Design Consistency
+
+1. Consistency Between CRUD Operations
+  * Only `PUT /cells` supports upsert behavior (returning 201 or 200 depending on existence). For Books and Sheets, PUT operations assume the resource already exists and return 400 otherwise.
+
+## Performance
+
+1. Recalculating all dependents after any update is simple and correct, but might not scale well in deeply chained formulas. Dependency graph could eventually benefit from caching or smarter traversal.
+
+## Security
+
+1. No authentication or authorization layers exist. While out of scope for MVP, it’s important for multi-user or production use cases.
+2. There's potential for formula injection or cyclic references — cycle detection isn’t yet implemented.
+
 ## Future additions
 
-
+1. History Tables
+  * While the activity_log provides a chronological record of changes, implementing dedicated history tables (e.g., cell_history, sheet_history) would significantly simplify state reconstruction, auditing, and rollback functionality.
+  * History tables would store full snapshots of each object on every change, making it easier to retrieve past versions or compare revisions without relying on patch-based reconstruction logic.
+2. More tests
+  * Explicitly test things like formula dependencies
+3. Increased formula support behind simple addition
+4. Allow for cross-book and cross-sheet formulas 
+  * Currently they assume the cells are in the same sheet
+5. Cycle detection
+  * Currently, recursive or circular formula references (e.g. `A1 = A2 + 1` and `A2 = A1 + 1`) are not handled and could lead to infinite loops
+6. User auditing
+  * Right now, all changes are recorded as coming from "system". In a real deployment, this would be based on the authenticated user.
