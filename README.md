@@ -4,22 +4,26 @@
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Run with Docker](#run-with-docker)
+  - [Database Connection](#database-connection)
 - [Tech Stack](#tech-stack)
-- [Resources](#resources)
+- [Domain Models](#domain-models)
+  - [Book](#book)
   - [Sheet](#sheet)
   - [Cell](#cell)
   - [Activity Log](#activity-log)
 - [Capabilities](#capabilities)
 - [Common Status Codes](#common-status-codes)
-- [Endpoints](#endpoints)
+- [API Endpoints](#api-endpoints)
+  - [Book Endpoints](#book-endpoints)
   - [Sheet Endpoints](#sheet-endpoints)
   - [Cell Endpoints](#cell-endpoints)
 - [Complete Walkthrough](#complete-walkthrough)
-  - [Sheets API Operations](#sheets-api-operations)
+  - [Book API Operations](#book-api-operations)
+  - [Sheet API Operations](#sheet-api-operations)
   - [Cells API Operations](#cells-api-operations)
-  - [Summary of Features Demonstrated](#summary-of-features-demonstrated)
 - [Review and Retrospect](#review-and-retrospect)
   - [Indexes](#indexes)
+  - [Database](#database)
 
 
 # Overview
@@ -58,18 +62,51 @@ docker exec -it demo-mysql-demo-1 mysql -uappuser -ppassword123 demo_db
 - MySQL
 - Maven
 - RESTful API design
+- GitHub Actions (CI/CD) – automatically build and run integration tests on pull requests
+
+# Domain Models
+
+## Book
+```sql
+CREATE TABLE books (
+	`id` INT AUTO_INCREMENT PRIMARY KEY,
+	`name` VARCHAR(255) NOT NULL,
+	CONSTRAINT uc_book_name UNIQUE (`name`)
+);
+```
+| Field   | Type   | Description          |
+|---------|--------|----------------------|
+| id      | int    | Unique identifier    |
+| name    | string | Unique book name     |
 
 ## Sheet
-Represents a spreadsheet. A sheet can have multiple cells.
-
+```sql
+CREATE TABLE sheets (
+	`id` INT AUTO_INCREMENT PRIMARY KEY,
+	`book_id` INT NOT NULL,
+	`name` VARCHAR(255) NOT NULL,
+	CONSTRAINT uc_sheet_book_name UNIQUE (book_id, name),
+	CONSTRAINT fk_BOOK FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+);
+```
 | Field   | Type   | Description       |
 |---------|--------|-------------------|
 | id      | int    | Unique identifier |
+| book_id | int    | Foreign key to the associated book |
 | name    | string | Sheet name        |
 
 ## Cell
-Represents a single cell in a spreadsheet grid (like A1, B2, etc.).
-
+```sql
+CREATE TABLE cells (
+	`id` INT AUTO_INCREMENT PRIMARY KEY,
+	`sheet_id` INT NOT NULL,
+	`row_num` INT NOT NULL,
+	`col_num` VARCHAR(10) NOT NULL,
+	`value` TEXT,
+	`formula` TEXT,
+	CONSTRAINT fk_sheet FOREIGN KEY (sheet_id) REFERENCES sheets(id) ON DELETE CASCADE
+);
+```
 | Field     | Type   | Description                              |
 |-----------|--------|------------------------------------------|
 | id        | int    | Unique identifier                        |
@@ -80,17 +117,30 @@ Represents a single cell in a spreadsheet grid (like A1, B2, etc.).
 | formula   | string | Optional formula (e.g., `=A1+B1`)        |
 
 ## Activity Log
-
-Represents a history of operations performed on sheets or cells. This table can be used for **auditing**, **version tracking**, or implementing **undo/redo** features.
-
+```sql
+CREATE TABLE activity_log (
+	`id` INT AUTO_INCREMENT PRIMARY KEY,
+	`entity_type` VARCHAR(10) NOT NULL CHECK (entity_type IN ('BOOK', 'SHEET', 'CELL')),
+	`operation` VARCHAR(10) NOT NULL CHECK (operation IN ('ADD', 'UPDATE', 'DELETE')),
+	`book_id` INT NOT NULL,
+	`sheet_id` INT,
+	`row_num` INT,
+	`col_num` VARCHAR(10),
+	`value` TEXT,
+	`formula` TEXT,
+	`updated_by` VARCHAR(255),
+	`updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+```
 | Field       | Type                          | Description                                                                 |
 |-------------|-------------------------------|-----------------------------------------------------------------------------|
 | id          | int                           | Auto-incremented unique identifier for the log entry                        |
-| entity_type | enum('SHEET','CELL')          | Type of entity affected by the operation (`SHEET` or `CELL`)                |
+| entity_type | enum('BOOK','SHEET','CELL')   | Type of entity affected by the operation (`BOOK`, `SHEET`, or `CELL`)       |
 | operation   | enum('ADD','UPDATE','DELETE') | The kind of action performed                                                |
-| sheet_id    | int                           | ID of the sheet involved in the operation                                   |
-| row_num     | int                           | Row number of the affected cell (null if entity is a sheet)                 |
-| col_num     | varchar(10)                   | Column name of the affected cell (null if entity is a sheet)                |
+| book_id     | int                           | Book affected (required)                                                    |
+| sheet_id    | int                           | ID of the sheet involved in the operation (null if not applicable)          |
+| row_num     | int                           | Row number of the affected cell (null if not applicable)                    |
+| col_num     | varchar(10)                   | Column name of the affected cell (null if not applicable)                   |
 | value       | text                          | Final value after the operation (e.g., raw input or calculated result)      |
 | formula     | text                          | Formula associated with the cell, if any (null if not applicable)           |
 | updated_by  | varchar(255)                  | Identifier of the user or system that made the change                       |
@@ -98,7 +148,7 @@ Represents a history of operations performed on sheets or cells. This table can 
 
 # Capabilities
 
-- Create/read/update/delete Sheets and Cells
+- Create/read/update/delete Books, Sheets and Cells
 - Input and evaluate formulas (with reference tracking)
 - Return structured JSON responses with status codes
 - No authentication currently required
@@ -111,85 +161,131 @@ Represents a history of operations performed on sheets or cells. This table can 
 | 200 OK      | Successful request     |
 | 201 Created | Resource was created   |
 | 400 Bad Request | Invalid input       |
-| 404 Not Found | Sheet/Cell not found |
+| 404 Not Found | Object not found |
+| 409 Conflict | Conflict during resource creation (e.g., duplicate) |
 | 500 Internal Server Error | Server error |
 
-# Endpoints
+# API Endpoints
+
+## Book Endpoints
+
+### Create
+**`POST /books`** – Create a new Book  
+```json
+{ "name": "Book1" }
+```
+
+**Example:**
+```bash
+curl -X POST http://localhost:8080/books \
+  -H "Content-Type: application/json" \
+  -d '{ "name": "Book1" }'
+```
+
+### Read
+- **`GET /books`** – Get all Books  
+- **`GET /books/{id}`** – Get a Book by ID
+
+### Update
+**`PUT /books/{id}`** – Update Book name by ID  
+```json
+{ "name": "Updated Book Name" }
+```
+
+### Delete
+**`DELETE /books/{id}`** – Delete Book by ID
 
 ## Sheet Endpoints
 
-### `GET /sheets`  
-Returns all sheets
+### Create
+**`POST /sheets`** – Create a new Sheet  
+```json
+{ "name": "Sheet1", "book": { "id": 1 } }
+```
 
-### `GET /sheets/{id}`  
-  Returns sheet by ID
+### Read
+- **`GET /sheets`** – Get all Sheets  
+- **`GET /sheets/{id}`** – Get a specific Sheet by ID
 
-### `POST /sheets`  
-  Creates a new sheet  
-  **Body:**
-  ```json
-  { "name": "sheet1" }
-  ```
+### Update
+- **`PUT /sheets/{id}`** – Update Sheet by ID  
+```json
+{ "name": "Sheet1 Updated" }
+```
 
-### `PUT /sheets/{id}`  
-  Updates sheet name  
-  **Body:**
-  ```json
-  { "name": "new-name" }
-  ```
+- **`PUT /sheets`** – Update Sheet by providing ID in the body  
+```json
+{ "id": 1, "name": "Sheet1 Updated" }
+```
 
-### `DELETE /sheets/{id}`  
-  Deletes a sheet by ID
+### Delete
+- **`DELETE /sheets/{id}`** – Delete Sheet by ID  
+- **`DELETE /sheets`** – Delete Sheet by name and book  
+```json
+{ "name": "Sheet1", "book": { "id": 1 } }
+```
 
 ## Cell Endpoints
 
-### `GET /cells?sheetId=1`  
-  Returns all cells in a sheet
+### Create
+**`POST /cells`** – Create or update a Cell  
+```json
+{
+  "sheet": { "id": 1 },
+  "rowNum": 1,
+  "colNum": "A",
+  "value": "42"
+}
+```
 
-### `GET /cells/{id}`  
-  Returns cell by ID
+### Read
+- **`GET /cells?sheetId=1`** – Get **all cells** from Sheet ID 1  
+- **`GET /cells/{id}`** – Get a **single Cell** by ID  
+- **`GET /cells/{sheetId}/{rowNum}/{colNum}`** – Get a Cell by **coordinates** in a specific sheet
 
-### `POST /cells`  
-  Creates a new cell  
-  **Body:**
-  ```json
-  {
-    "sheetId": 1,
-    "row": 1,
-    "col": "A",
-    "value": "42",
-    "formula": null
-  }
-  ```
+### Update
+- **`PUT /cells`** – Update a Cell  
+(same body as `POST /cells`)
 
-### `PUT /cells`  
-  Updates a cell’s value or formula  
-  **Body:**
-  ```json
-  {
-    "sheet": { "name": "sheet1-updated" },
-    "rowNum": 2,
-    "colNum": "A",
-    "value": "5"
-  }
-  ```
+### Delete
+- **`DELETE /cells`** – Delete a Cell by sheet + row + column  
+```json
+{
+  "sheet": { "id": 1 },
+  "rowNum": 1,
+  "colNum": "A"
+}
+```
 
-### `DELETE /cells`  
-  Deletes a cell
-  **Body:**
-  ```json
-  {
-    "sheet": { "name": "sheet1-updated" },
-    "rowNum": 1,
-    "colNum": "A"
-  }
-  ```
+- **`DELETE /cells/{id}`** – Delete a Cell directly by ID  
+- **`DELETE /cells/{sheetId}/{rowNum}/{colNum}`** – Delete a Cell by sheet ID and coordinates
 
 # Complete Walkthrough
 
 This guide demonstrates how to interact with the REST API, showcasing CRUD operations for sheets and cells.
 
-## Sheets API Operations
+## Book API Operations
+
+### Create Book (`Book1`)
+
+```sh
+curl -X POST http://localhost:8080/books \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Book1"}'
+```
+
+#### Expected Response (201 Created)
+```json
+{
+  "status": 201,
+  "data": {
+    "id": 1,
+    "name": "Book1"
+  }
+}
+```
+
+## Sheet API Operations
 
 ### Create Sheet 1 (`sheet1`)
 ```sh
