@@ -21,6 +21,7 @@
   - [Book API Operations](#book-api-operations)
   - [Sheet API Operations](#sheet-api-operations)
   - [Cells API Operations](#cells-api-operations)
+  - [Database Result](#database-results)
 - [Review and Retrospect](#review-and-retrospect)
   - [Indexes](#indexes)
   - [Database](#database)
@@ -295,16 +296,15 @@ Supports sheet by ID or name + book
 
 # Complete Walkthrough
 
-This guide demonstrates how to interact with the REST API, showcasing CRUD operations for sheets and cells.
+This guide demonstrates how to interact with the REST API, showcasing CRUD operations for Books, Sheets, and Cells — including proper creation order and reference behavior.
 
 ## Book API Operations
 
 ### Create Book (`Book1`)
-
 ```sh
 curl -X POST http://localhost:8080/books \
   -H "Content-Type: application/json" \
-  -d '{"name": "Book1"}'
+  -d '{ "name": "Book1" }'
 ```
 
 #### Expected Response (201 Created)
@@ -320,12 +320,13 @@ curl -X POST http://localhost:8080/books \
 
 ## Sheet API Operations
 
-### Create Sheet 1 (`sheet1`)
+### Create Sheet 1 (`sheet1`) referencing Book by **name**
 ```sh
 curl -X POST "http://localhost:8080/sheets" \
      -H "Content-Type: application/json" \
-     -d '{ "name": "sheet1" }'
+     -d '{ "name": "sheet1", "book": { "name": "Book1" } }'
 ```
+
 #### Expected Response (201 Created)
 ```json
 {
@@ -337,12 +338,13 @@ curl -X POST "http://localhost:8080/sheets" \
 }
 ```
 
-### Create Sheet 2 (`sheet2`)
+### Create Sheet 2 (`sheet2`) referencing Book by **id**
 ```sh
 curl -X POST "http://localhost:8080/sheets" \
      -H "Content-Type: application/json" \
-     -d '{ "name": "sheet2" }'
+     -d '{ "name": "sheet2", "book": { "id": 1 } }'
 ```
+
 #### Expected Response (201 Created)
 ```json
 {
@@ -417,33 +419,36 @@ curl -X GET "http://localhost:8080/sheets"
 
 ## Cells API Operations
 
-### Create Cells A1 and A2 in `sheet1-updated`
+### Create Cell A1 in `sheet1-updated` using Sheet Name + Book Name
 ```sh
 curl -X POST "http://localhost:8080/cells" \
      -H "Content-Type: application/json" \
-     -d '{ 
-           "sheet": { "name": "sheet1-updated" },
+     -d '{
+           "sheet": { "name": "sheet1-updated", "book": { "name": "Book1" } },
            "rowNum": 1,
            "colNum": "A",
            "value": "8"
          }'
+```
 
+### Create Cell A2 using Sheet ID
+```sh
 curl -X POST "http://localhost:8080/cells" \
      -H "Content-Type: application/json" \
-     -d '{ 
-           "sheet": { "name": "sheet1-updated" },
+     -d '{
+           "sheet": { "id": 1 },
            "rowNum": 2,
            "colNum": "A",
            "value": "18"
          }'
 ```
 
-### Create a Formula Cell `=A1+A2` in Row 3
+### Create Cell A3 with Formula `=A1+A2`
 ```sh
 curl -X POST "http://localhost:8080/cells" \
      -H "Content-Type: application/json" \
-     -d '{ 
-           "sheet": { "name": "sheet1-updated" },
+     -d '{
+           "sheet": { "id": 1 },
            "rowNum": 3,
            "colNum": "A",
            "formula": "=A1+A2"
@@ -464,19 +469,19 @@ curl -X POST "http://localhost:8080/cells" \
 }
 ```
 
-### Update A2 to a New Value (Triggers A3 to Update)
+### Update A2 to trigger A3 recalculation
 ```sh
 curl -X PUT "http://localhost:8080/cells" \
      -H "Content-Type: application/json" \
-     -d '{ 
-           "sheet": { "name": "sheet1-updated" },
+     -d '{
+           "sheet": { "id": 1 },
            "rowNum": 2,
            "colNum": "A",
            "value": "5"
          }'
 ```
 
-### Verify that A3 Now Shows `13.0` (8 + 5)
+### Get A3 (should now equal 13.0)
 ```sh
 curl -X GET "http://localhost:8080/cells/1/3/A"
 ```
@@ -495,16 +500,15 @@ curl -X GET "http://localhost:8080/cells/1/3/A"
 }
 ```
 
-### Try Creating a Cell in a Non-Existent Sheet
+### Try Creating Cell on Nonexistent Sheet
 ```sh
 curl -X POST "http://localhost:8080/cells" \
      -H "Content-Type: application/json" \
-     -d '{ 
-           "sheet": { "name": "nonexistent-sheet" },
+     -d '{
+           "sheet": { "name": "does-not-exist", "book": { "name": "Book1" } },
            "rowNum": 2,
            "colNum": "B",
-           "value": "Should Fail",
-           "formula": ""
+           "value": "Should Fail"
          }'
 ```
 #### Expected Response (404 Not Found)
@@ -512,27 +516,20 @@ curl -X POST "http://localhost:8080/cells" \
 {
   "status": 404,
   "error": "Not Found",
-  "message": "Sheet with name \"nonexistent-sheet\" not found.",
+  "message": "Sheet with name \"does-not-exist\" not found.",
   "path": "/cells"
 }
 ```
 
-### Delete Cell from `sheet1-updated`
+### Delete Cell A1
 ```sh
 curl -X DELETE "http://localhost:8080/cells" \
      -H "Content-Type: application/json" \
-     -d '{ 
-           "sheet": { "name": "sheet1-updated" },
+     -d '{
+           "sheet": { "id": 1 },
            "rowNum": 1,
            "colNum": "A"
          }'
-```
-#### Expected Response (200 OK)
-```json
-{
-  "status": 200,
-  "message": "Cell deleted successfully"
-}
 ```
 
 ## Database Results
@@ -541,25 +538,25 @@ mysql> select * from activity_log;
 +----+-------------+-----------+----------+---------+---------+----------------+---------+------------+---------------------+
 | id | entity_type | operation | sheet_id | row_num | col_num | value          | formula | updated_by | updated_at          |
 +----+-------------+-----------+----------+---------+---------+----------------+---------+------------+---------------------+
-|  1 | SHEET       | ADD       |        1 |    NULL | NULL    | sheet1         | NULL    | system     | 2025-04-10 23:21:03 |
-|  2 | SHEET       | ADD       |        2 |    NULL | NULL    | sheet2         | NULL    | system     | 2025-04-10 23:21:03 |
-|  3 | SHEET       | UPDATE    |        1 |    NULL | NULL    | sheet1-updated | NULL    | system     | 2025-04-10 23:21:03 |
-|  4 | SHEET       | DELETE    |        2 |    NULL | NULL    | sheet2         | NULL    | system     | 2025-04-10 23:21:03 |
-|  5 | CELL        | ADD       |        1 |       1 | A       | 8              | NULL    | system     | 2025-04-10 23:21:04 |
-|  6 | CELL        | ADD       |        1 |       2 | A       | 18             | NULL    | system     | 2025-04-10 23:21:04 |
-|  7 | CELL        | ADD       |        1 |       3 | A       | 26.0           | =A1+A2  | system     | 2025-04-10 23:21:04 |
-|  8 | CELL        | UPDATE    |        1 |       2 | A       | 5              | NULL    | system     | 2025-04-10 23:21:04 |
-|  9 | CELL        | DELETE    |        1 |       1 | A       | 8              | NULL    | system     | 2025-04-10 23:21:04 |
+|  1 | BOOK        | ADD       |     NULL |    NULL | NULL    | Book1          | NULL    | system     | 2025-04-10 23:21:03 |
+|  2 | SHEET       | ADD       |        1 |    NULL | NULL    | sheet1         | NULL    | system     | 2025-04-10 23:21:03 |
+|  3 | SHEET       | ADD       |        2 |    NULL | NULL    | sheet2         | NULL    | system     | 2025-04-10 23:21:03 |
+|  4 | SHEET       | UPDATE    |        1 |    NULL | NULL    | sheet1-updated | NULL    | system     | 2025-04-10 23:21:03 |
+|  5 | SHEET       | DELETE    |        2 |    NULL | NULL    | sheet2         | NULL    | system     | 2025-04-10 23:21:03 |
+|  6 | CELL        | ADD       |        1 |       1 | A       | 8              | NULL    | system     | 2025-04-10 23:21:04 |
+|  7 | CELL        | ADD       |        1 |       2 | A       | 18             | NULL    | system     | 2025-04-10 23:21:04 |
+|  8 | CELL        | ADD       |        1 |       3 | A       | 26.0           | =A1+A2  | system     | 2025-04-10 23:21:04 |
+|  9 | CELL        | UPDATE    |        1 |       2 | A       | 5              | NULL    | system     | 2025-04-10 23:21:04 |
+| 10 | CELL        | DELETE    |        1 |       1 | A       | 8              | NULL    | system     | 2025-04-10 23:21:04 |
 +----+-------------+-----------+----------+---------+---------+----------------+---------+------------+---------------------+
-9 rows in set (0.00 sec)
 ```
 
 ## Summary of Features Demonstrated
-* Creating, updating, retrieving, and deleting **sheets**.  
-* Creating, updating, retrieving, and deleting **cells**.  
-* Error handling for **nonexistent sheets**.  
-* **Formula dependency tracking**: changes in A1/A2 update A3.  
-* Final verification to confirm changes.  
+* Creating a Book, then Sheets, then Cells — in correct dependency order  
+* Sheet reference by both `id` and `name + book`  
+* Full lifecycle of Cells: create, update, formula evaluation, delete  
+* Error handling for nonexistent resources  
+* Activity log recording every action with metadata
 
 # Review and Retrospect
 
