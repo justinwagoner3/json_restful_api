@@ -98,21 +98,7 @@ public class SheetController {
     public ResponseEntity<Object> updateSheetByPath(@PathVariable int id, @RequestBody Sheet updatedSheet) {
         return updateSheet(id, updatedSheet, "/sheets/" + id);
     }
-    
-    @PutMapping
-    public ResponseEntity<Object> updateSheetByBody(@RequestBody Sheet updatedSheet) {
-        if (updatedSheet.getId() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of(
-                            "status", 400,
-                            "error", "Bad Request",
-                            "message", "Sheet ID must be provided in the body.",
-                            "path", "/sheets"
-                    ));
-        }
-        return updateSheet(updatedSheet.getId(), updatedSheet, "/sheets");
-    }
-            
+                
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> deleteSheet(@PathVariable int id) {
         try {
