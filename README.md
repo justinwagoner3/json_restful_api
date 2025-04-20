@@ -198,9 +198,13 @@ curl -X POST http://localhost:8080/books \
 ## Sheet Endpoints
 
 ### Create
-**`POST /sheets`** – Create a new Sheet  
+**`POST /sheets`** – Create a new Sheet
+Supports book object identified by id or name
 ```json
+// Using ID
 { "name": "Sheet1", "book": { "id": 1 } }
+// Using Name
+{ "name": "Sheet1", "book": { "name": "Book1" } }
 ```
 
 ### Read
@@ -221,17 +225,38 @@ curl -X POST http://localhost:8080/books \
 ### Delete
 - **`DELETE /sheets/{id}`** – Delete Sheet by ID  
 - **`DELETE /sheets`** – Delete Sheet by name and book  
+Supports book object identified by id or name
 ```json
+// Using ID
 { "name": "Sheet1", "book": { "id": 1 } }
+// Using Name
+{ "name": "Sheet1", "book": { "name": "Book1" } }
 ```
 
 ## Cell Endpoints
 
 ### Create
 **`POST /cells`** – Create or update a Cell  
+You can reference the sheet using either the id, or name + book:
+
 ```json
+// Using Sheet ID
 {
   "sheet": { "id": 1 },
+  "rowNum": 1,
+  "colNum": "A",
+  "value": "42"
+}
+// Using Sheet Name + Book ID
+{
+  "sheet": { "name": "Sheet1", "book": { "id": 1 } },
+  "rowNum": 1,
+  "colNum": "A",
+  "value": "42"
+}
+// Using Sheet Name + Book Name
+{
+  "sheet": { "name": "Sheet1", "book": { "name": "Book1" } },
   "rowNum": 1,
   "colNum": "A",
   "value": "42"
@@ -249,9 +274,17 @@ curl -X POST http://localhost:8080/books \
 
 ### Delete
 - **`DELETE /cells`** – Delete a Cell by sheet + row + column  
+Supports sheet by ID or name + book
 ```json
+// Using Sheet ID
 {
   "sheet": { "id": 1 },
+  "rowNum": 1,
+  "colNum": "A"
+}
+// Using Sheet Name + Book Name
+{
+  "sheet": { "name": "Sheet1", "book": { "name": "Book1" } },
   "rowNum": 1,
   "colNum": "A"
 }
