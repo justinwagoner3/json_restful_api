@@ -21,10 +21,8 @@
   - [Book API Operations](#book-api-operations)
   - [Sheet API Operations](#sheet-api-operations)
   - [Cells API Operations](#cells-api-operations)
-  - [Database Result](#database-results)
+  - [Database Results](#database-results)
 - [Review and Retrospect](#review-and-retrospect)
-  - [Indexes](#indexes)
-  - [Database](#database)
 
 
 # Overview
@@ -174,13 +172,6 @@ CREATE TABLE activity_log (
 **`POST /books`** – Create a new Book  
 ```json
 { "name": "Book1" }
-```
-
-**Example:**
-```bash
-curl -X POST http://localhost:8080/books \
-  -H "Content-Type: application/json" \
-  -d '{ "name": "Book1" }'
 ```
 
 ### Read
@@ -514,8 +505,19 @@ curl -X PUT "http://localhost:8080/cells" \
          }'
 ```
 
-#### Expected Response (200 Updated)
+#### Expected Response (200 OK)
 ```json
+{
+  "status" : 200,
+  "data" : {
+    "id" : 2,
+    "sheetId" : 1,
+    "rowNum" : 2,
+    "colNum" : "A",
+    "value" : "5",
+    "formula" : null
+  }
+}
 ```
 
 ### Get A3 (should now equal 13.0)
@@ -569,23 +571,56 @@ curl -X DELETE "http://localhost:8080/cells" \
          }'
 ```
 
+#### Expected Response (200 OK)
+```json
+{
+  "status" : 200,
+  "message" : "Cell deleted successfully"
+}
+```
+
 ## Database Results
 ```
+mysql> select * from books;
++----+-------+
+| id | name  |
++----+-------+
+|  1 | Book1 |
++----+-------+
+1 row in set (0.01 sec)
+
+mysql> select * from sheets;
++----+---------+----------------+
+| id | book_id | name           |
++----+---------+----------------+
+|  1 |       1 | sheet1-updated |
++----+---------+----------------+
+1 row in set (0.00 sec)
+
+mysql> select * from cells;
++----+----------+---------+---------+-------+---------+
+| id | sheet_id | row_num | col_num | value | formula |
++----+----------+---------+---------+-------+---------+
+|  2 |        1 |       2 | A       | 5     | NULL    |
+|  3 |        1 |       3 | A       | 5.0   | =A1+A2  |
++----+----------+---------+---------+-------+---------+
+
 mysql> select * from activity_log;
-+----+-------------+-----------+----------+---------+---------+----------------+---------+------------+---------------------+
-| id | entity_type | operation | sheet_id | row_num | col_num | value          | formula | updated_by | updated_at          |
-+----+-------------+-----------+----------+---------+---------+----------------+---------+------------+---------------------+
-|  1 | BOOK        | ADD       |     NULL |    NULL | NULL    | Book1          | NULL    | system     | 2025-04-10 23:21:03 |
-|  2 | SHEET       | ADD       |        1 |    NULL | NULL    | sheet1         | NULL    | system     | 2025-04-10 23:21:03 |
-|  3 | SHEET       | ADD       |        2 |    NULL | NULL    | sheet2         | NULL    | system     | 2025-04-10 23:21:03 |
-|  4 | SHEET       | UPDATE    |        1 |    NULL | NULL    | sheet1-updated | NULL    | system     | 2025-04-10 23:21:03 |
-|  5 | SHEET       | DELETE    |        2 |    NULL | NULL    | sheet2         | NULL    | system     | 2025-04-10 23:21:03 |
-|  6 | CELL        | ADD       |        1 |       1 | A       | 8              | NULL    | system     | 2025-04-10 23:21:04 |
-|  7 | CELL        | ADD       |        1 |       2 | A       | 18             | NULL    | system     | 2025-04-10 23:21:04 |
-|  8 | CELL        | ADD       |        1 |       3 | A       | 26.0           | =A1+A2  | system     | 2025-04-10 23:21:04 |
-|  9 | CELL        | UPDATE    |        1 |       2 | A       | 5              | NULL    | system     | 2025-04-10 23:21:04 |
-| 10 | CELL        | DELETE    |        1 |       1 | A       | 8              | NULL    | system     | 2025-04-10 23:21:04 |
-+----+-------------+-----------+----------+---------+---------+----------------+---------+------------+---------------------+
++----+-------------+-----------+---------+----------+---------+---------+----------------+---------+------------+---------------------+
+| id | entity_type | operation | book_id | sheet_id | row_num | col_num | value          | formula | updated_by | updated_at          |
++----+-------------+-----------+---------+----------+---------+---------+----------------+---------+------------+---------------------+
+|  1 | BOOK        | ADD       |       1 |     NULL |    NULL | NULL    | Book1          | NULL    | system     | 2025-04-20 21:04:06 |
+|  2 | SHEET       | ADD       |       1 |        1 |    NULL | NULL    | sheet1         | NULL    | system     | 2025-04-20 21:04:11 |
+|  3 | SHEET       | ADD       |       1 |        2 |    NULL | NULL    | sheet2         | NULL    | system     | 2025-04-20 21:04:17 |
+|  4 | SHEET       | UPDATE    |       1 |        1 |    NULL | NULL    | sheet1-updated | NULL    | system     | 2025-04-20 21:04:24 |
+|  5 | SHEET       | DELETE    |       1 |        2 |    NULL | NULL    | sheet2         | NULL    | system     | 2025-04-20 21:04:45 |
+|  6 | CELL        | ADD       |       1 |        1 |       1 | A       | 8              | NULL    | system     | 2025-04-20 21:04:55 |
+|  7 | CELL        | ADD       |       1 |        1 |       2 | A       | 18             | NULL    | system     | 2025-04-20 21:05:04 |
+|  8 | CELL        | ADD       |       1 |        1 |       3 | A       | 26.0           | =A1+A2  | system     | 2025-04-20 21:05:14 |
+|  9 | CELL        | UPDATE    |       1 |        1 |       2 | A       | 5              | NULL    | system     | 2025-04-20 21:05:24 |
+| 10 | CELL        | DELETE    |       1 |        1 |       1 | A       | 8              | NULL    | system     | 2025-04-20 21:06:11 |
++----+-------------+-----------+---------+----------+---------+---------+----------------+---------+------------+---------------------+
+10 rows in set (0.00 sec)
 ```
 
 ## Summary of Features Demonstrated
@@ -597,9 +632,11 @@ mysql> select * from activity_log;
 
 # Review and Retrospect
 
-## Cells
+## Database
 
-### Indexes
+1. Should have switched the order of rows and cols for better query readability.
+2. generic `id` fields in db is confusing... should've done book_id, sheet_id, cell_id as PKs to make joins easier
+3. Cells indexes:
 
 Considered adding the following indexes, but was unsure how often grouping this specific would be used:
 
@@ -608,12 +645,8 @@ CREATE INDEX idx_cells_sheet_row ON cells(sheet_id, row_num);
 CREATE INDEX idx_cells_sheet_col ON cells(sheet_id, row_col);
 ```
 
-TODO will need to implement this - Over time we could use the access_log (activity_log) to determine if these are necessary.
+Over time we could use the access_log (activity_log) to determine if these are necessary.
 
-### Database
+## Future additions
 
-Should have switched the order of rows and cols for better query readability.
 
-## TO SORT
-
-generic `id` fields in db is confusing... should've done book_id, sheet_id, cell_id as PKs to make joins easier
