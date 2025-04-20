@@ -95,21 +95,25 @@ public class CellController {
             String colNum = (String) requestBody.get("colNum");
             String value = (String) requestBody.getOrDefault("value", null);
             String formula = (String) requestBody.getOrDefault("formula", null);
-
+    
             if (rowNum == null || colNum == null) {
                 throw new IllegalArgumentException("Row number and column number are required.");
             }
-
+    
             Cell cell = new Cell(sheet, rowNum, colNum, value, formula);
-            Cell createdCell = cellService.createOrUpdateCell(cell);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(Map.of("status", 201, "data", new CellDTO(createdCell)));
+            boolean existedBefore = cellService.getCellBySheetRowCol(sheet, rowNum, colNum).isPresent();
+    
+            Cell result = cellService.createOrUpdateCell(cell);
+            int status = existedBefore ? 200 : 201;
+    
+            return ResponseEntity.status(status)
+                .body(Map.of("status", status, "data", new CellDTO(result)));
         } catch (IllegalArgumentException | SheetNotFoundException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("status", 400, "error", "Bad Request", "message", e.getMessage(), "path", "/cells"));
+                .body(Map.of("status", 400, "error", "Bad Request", "message", e.getMessage(), "path", "/cells"));
         }
     }
-
+    
     @PutMapping
     public ResponseEntity<Object> updateCell(@RequestBody Map<String, Object> requestBody) {
         return createOrUpdateCell(requestBody);
