@@ -656,7 +656,7 @@ Over time we could use the access_log (activity_log) to determine if these are n
 ## Design Consistency
 
 1. Consistency Between CRUD Operations
-  * Only `PUT /cells` supports upsert behavior (returning 201 or 200 depending on existence). For Books and Sheets, PUT operations assume the resource already exists and return 400 otherwise.
+    * Only `PUT /cells` supports upsert behavior (returning 201 or 200 depending on existence). For Books and Sheets, PUT operations assume the resource already exists and return 400 otherwise.
 
 ## Performance
 
@@ -671,13 +671,13 @@ Over time we could use the access_log (activity_log) to determine if these are n
 
 1. History Tables
     * While the activity_log provides a chronological record of changes, implementing dedicated history tables (e.g., cell_history, sheet_history) would significantly simplify state reconstruction, auditing, and rollback functionality.
-  * History tables would store full snapshots of each object on every change, making it easier to retrieve past versions or compare revisions without relying on patch-based reconstruction logic.
+    * History tables would store full snapshots of each object on every change, making it easier to retrieve past versions or compare revisions without relying on patch-based reconstruction logic.
 2. More tests
-  * Explicitly test things like formula dependencies
+    * Explicitly test things like formula dependencies
 3. Increased formula support behind simple addition
 4. Allow for cross-book and cross-sheet formulas 
-  * Currently they assume the cells are in the same sheet
+    * Currently they assume the cells are in the same sheet
 5. Cycle detection
-  * Currently, recursive or circular formula references (e.g. `A1 = A2 + 1` and `A2 = A1 + 1`) are not handled and could lead to infinite loops
+    * Currently, recursive or circular formula references (e.g. `A1 = A2 + 1` and `A2 = A1 + 1`) are not handled and could lead to infinite loops
 6. User auditing
-  * Right now, all changes are recorded as coming from "system". In a real deployment, this would be based on the authenticated user.
+    * Right now, all changes are recorded as coming from "system". In a real deployment, this would be based on the authenticated user.
