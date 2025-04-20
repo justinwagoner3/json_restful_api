@@ -23,6 +23,7 @@
   - [Cells API Operations](#cells-api-operations)
   - [Database Results](#database-results)
 - [Review and Retrospect](#review-and-retrospect)
+- [Future Additions](#future-additions)
 
 
 # Overview
@@ -666,7 +667,7 @@ Over time we could use the access_log (activity_log) to determine if these are n
 1. No authentication or authorization layers exist. While out of scope for MVP, it’s important for multi-user or production use cases.
 2. There's potential for formula injection or cyclic references — cycle detection isn’t yet implemented.
 
-## Future additions
+# Future Additions
 
 1. History Tables
   * While the activity_log provides a chronological record of changes, implementing dedicated history tables (e.g., cell_history, sheet_history) would significantly simplify state reconstruction, auditing, and rollback functionality.
