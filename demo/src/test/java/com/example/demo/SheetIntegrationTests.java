@@ -89,7 +89,7 @@ public class SheetIntegrationTests {
     }
 
     @Test
-    void testUpdateSheetByPath() throws Exception {
+    void testUpdateSheetByPath_fullPayLoad() throws Exception {
         Sheet sheet = new Sheet();
         sheet.setName("To Update");
         sheet.setBook(testBook);
@@ -107,21 +107,29 @@ public class SheetIntegrationTests {
     }
 
     @Test
-    void testUpdateSheetByBody_MissingId() throws Exception {
+    void testUpdateSheetByPath_minimalPayload() throws Exception {
         Sheet sheet = new Sheet();
-        sheet.setName("Missing ID");
+        sheet.setName("Original Name");
         sheet.setBook(testBook);
-
-        mockMvc.perform(put("/sheets")
+        sheet = sheetRepository.save(sheet);
+    
+        // Send only the updated name in the body (no ID, no book)
+        String updatedJson = """
+            {
+              "name": "Sheet1 Updated"
+            }
+            """;
+    
+        mockMvc.perform(put("/sheets/" + sheet.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(sheet)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message", containsString("Sheet ID must be provided")));
-
-        List<ActivityLog> logs = activityLogRepository.findByEntityType(EntityType.SHEET);
-        assertTrue(logs.stream().noneMatch(log -> log.getOperation() == OperationType.UPDATE));
+                .content(updatedJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.name").value("Sheet1 Updated"));
+    
+        List<ActivityLog> logs = activityLogRepository.findByEntityTypeAndOperation(EntityType.SHEET, OperationType.UPDATE);
+        assertFalse(logs.isEmpty());
     }
-
+    
     @Test
     void testDeleteSheetById() throws Exception {
         Sheet sheet = new Sheet();

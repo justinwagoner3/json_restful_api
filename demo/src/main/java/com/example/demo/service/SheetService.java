@@ -82,31 +82,15 @@ public class SheetService {
         if (newSheet.getName() == null || newSheet.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Sheet name is required and cannot be empty.");
         }
-        if (newSheet.getBook() == null) {
-            throw new IllegalArgumentException("Sheet must be associated with a book.");
-        }
-    
-        Book resolvedBook;
-        if (newSheet.getBook().getId() != null) {
-            resolvedBook = bookRepository.findById(newSheet.getBook().getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book with ID " + newSheet.getBook().getId() + " not found."));
-        } else if (newSheet.getBook().getName() != null) {
-            resolvedBook = bookRepository.findByName(newSheet.getBook().getName())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Book with name \"" + newSheet.getBook().getName() + "\" not found."));
-        } else {
-            throw new IllegalArgumentException("Book must contain either an ID or name.");
-        }
     
         return sheetRepository.findById(id).map(sheet -> {
             sheet.setName(newSheet.getName());
-            sheet.setBook(resolvedBook);
             Sheet updatedSheet = sheetRepository.save(sheet);
-    
             activityLogService.logActivitySheet(updatedSheet.getId(), "system", ActivityLog.OperationType.UPDATE, ActivityLog.EntityType.SHEET);
             return updatedSheet;
         }).orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + id + " not found, cannot UPDATE."));
     }
-    
+        
     public void deleteSheet(int id) {
         Sheet sheet = sheetRepository.findById(id)
             .orElseThrow(() -> new SheetNotFoundException("Sheet with ID " + id + " not found, cannot DELETE."));

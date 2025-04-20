@@ -218,11 +218,6 @@ Supports book object identified by id or name
 { "name": "Sheet1 Updated" }
 ```
 
-- **`PUT /sheets`** – Update Sheet by providing ID in the body  
-```json
-{ "id": 1, "name": "Sheet1 Updated" }
-```
-
 ### Delete
 - **`DELETE /sheets/{id}`** – Delete Sheet by ID  
 - **`DELETE /sheets`** – Delete Sheet by name and book  
@@ -330,11 +325,12 @@ curl -X POST "http://localhost:8080/sheets" \
 #### Expected Response (201 Created)
 ```json
 {
-  "status": 201,
-  "data": {
-    "id": 1,
-    "name": "sheet1"
-  }
+  "data" : {
+    "id" : 1,
+    "name" : "sheet1",
+    "bookId" : 1
+  },
+  "status" : 201
 }
 ```
 
@@ -348,11 +344,12 @@ curl -X POST "http://localhost:8080/sheets" \
 #### Expected Response (201 Created)
 ```json
 {
-  "status": 201,
-  "data": {
-    "id": 2,
-    "name": "sheet2"
-  }
+  "data" : {
+    "id" : 2,
+    "name" : "sheet2",
+    "bookId" : 1
+  },
+  "status" : 201
 }
 ```
 
