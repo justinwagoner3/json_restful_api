@@ -268,9 +268,9 @@ You can reference the sheet using either the id, or name + book:
 - **`PUT /cells`** – Update a Cell  
 (same body as `POST /cells`)
 
-* Processes as upsert (only true for cells)
- * 200 for updated
- * 201 for created
+  * Processes as upsert (only true for cells)
+    * 200 for updated
+    * 201 for created
 
 ### Delete
 - **`DELETE /cells`** – Delete a Cell by sheet + row + column  
